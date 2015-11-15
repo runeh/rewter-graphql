@@ -37,7 +37,7 @@ const TransitType = new GraphQLEnumType({
     }
 });
 
-var GeoLocation = new GraphQLObjectType({
+const GeoLocation = new GraphQLObjectType({
     name: 'GeoLocation',
     description: 'geo type',
     fields: {
@@ -52,7 +52,7 @@ var GeoLocation = new GraphQLObjectType({
     }
 });
 
-var Line = new GraphQLObjectType({
+const Line = new GraphQLObjectType({
     name: 'Line',
     description: 'A public transit line',
     fields: () => ({
@@ -89,7 +89,7 @@ var Line = new GraphQLObjectType({
     interfaces: [ ]
 });
 
-var Stop = new GraphQLObjectType({
+const Stop = new GraphQLObjectType({
     name: 'Stop',
     description: 'A stop',
     fields: () => ({
@@ -173,7 +173,7 @@ var Stop = new GraphQLObjectType({
     })
 });
 
-var StopVisit = new GraphQLObjectType({
+const StopVisit = new GraphQLObjectType({
     name: 'Visit',
     description: 'llalaaalallalalala',
     fields: () => ({
