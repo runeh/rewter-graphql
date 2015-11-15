@@ -5,7 +5,6 @@ import LRU from 'lru-cache';
 const cache = LRU();
 const baseUrl = 'https://reisapi.ruter.no';
 
-
 function parseStopInfo(info) {
     return {
         id: info.ID,
@@ -29,6 +28,41 @@ function parseLineInfo(info) {
         transitType: info.Transportation,
         color: info.LineColour
     };
+}
+
+function parseDeviations(e) {
+    return e ? e.map(parseDeviation) : [];
+}
+
+function parseDeviation(e) {
+    return { 
+        id: e.ID,
+        header: e.Header
+    };
+}
+
+function parseVisit(e) { 
+    return {
+        stopId: parseInt(e.MonitoringRef, 10),
+        lineId: parseInt(e.MonitoredVehicleJourney.LineRef),
+        destinationName: e.MonitoredVehicleJourney.DestinationName,
+        name: e.MonitoredVehicleJourney.PublishedLineName,
+        direction: e.MonitoredVehicleJourney.DirectionRef,
+        recordedAtTime: new Date(e.RecordedAtTime).toString(),
+        expectedArrival: new Date(e.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime).toString(),
+        deviations: parseDeviations(e.Extensions.Deviations),
+        lineColour: e.Extensions.LineColour,
+        platform: e.MonitoredVehicleJourney.MonitoredCall.DeparturePlatformName,
+    };
+}
+
+function parsePlace(e) {
+    return {
+        id: e.ID,
+        name: e.Name,
+        district: e.District,
+        placeType: e.PlaceType
+    }
 }
 
 function getJson(url, query) {
@@ -70,32 +104,6 @@ export function stopInfo(id) {
             .then(parseStopInfo);
 }
 
-function parseDeviations(e) {
-    return e ? e.map(parseDeviation) : [];
-}
-
-function parseDeviation(e) {
-    return { 
-        id: e.ID,
-        header: e.Header
-    };
-}
-
-function parseVisit(e) { 
-    return {
-        stopId: parseInt(e.MonitoringRef, 10),
-        lineId: parseInt(e.MonitoredVehicleJourney.LineRef),
-        destinationName: e.MonitoredVehicleJourney.DestinationName,
-        name: e.MonitoredVehicleJourney.PublishedLineName,
-        direction: e.MonitoredVehicleJourney.DirectionRef,
-        recordedAtTime: new Date(e.RecordedAtTime).toString(),
-        expectedArrival: new Date(e.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime).toString(),
-        deviations: parseDeviations(e.Extensions.Deviations),
-        lineColour: e.Extensions.LineColour,
-        platform: e.MonitoredVehicleJourney.MonitoredCall.DeparturePlatformName,
-    };
-}
-
 export function stopVisits(id, transporttypes, linenames) {
     console.log("fetchin stop info for", id);
     return getJson(
@@ -104,23 +112,9 @@ export function stopVisits(id, transporttypes, linenames) {
 
 }
 
-function parsePlace(e) {
-    //console.log(e);
-    const x = {
-        id: e.ID,
-        name: e.Name,
-        district: e.District,
-        placeType: e.PlaceType
-    }
-    console.log(x)
-    return x
-}
-
 export function placesForName(name, counties) {
     console.log("fetchin places for", name);
     return getJson(
         `${baseUrl}/Place/GetPlaces/${name}`, {counties}
     ).then(e => e.map(parsePlace));
-
 }
-
