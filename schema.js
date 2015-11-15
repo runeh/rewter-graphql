@@ -1,4 +1,4 @@
-import {stopInfo, lineInfo, linesForStop, stopsForLine} from './ruter-fetcher';
+import {stopInfo, lineInfo, linesForStop, stopsForLine, stopVisits} from './ruter-fetcher';
 
 import {
   GraphQLEnumType,
@@ -166,20 +166,51 @@ const Stop = new GraphQLObjectType({
 
             }
         },
-        stopVisits: {
+        departures: {
             type: new GraphQLList(StopVisit),
-            description: 'Pending visits for stop. This is the reealtime info'
+            description: 'Pending visits for stop. This is the reealtime info',
+            resolve: function({id}) {
+                console.log(id);
+                return stopVisits(id)
+                return null
+            }
         }
     })
 });
 
+
 const StopVisit = new GraphQLObjectType({
-    name: 'Visit',
-    description: 'llalaaalallalalala',
+    name: 'StopVisit',
+    description: 'Stop visit',
     fields: () => ({
-        journeys: {
+        expectedArrival: {
             type: new GraphQLNonNull(GraphQLString),
-            description: 'desc'
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+        destinationName: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+        stop: {
+            type: new GraphQLNonNull(Stop),
+            resolve: ({stopId}) => stopInfo(stopId)
+        },
+        line: {
+            type: new GraphQLNonNull(Line),
+            resolve: ({lineId}) => lineInfo(lineId)
+        },
+        destinationName: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        direction: {
+            type: GraphQLString
+        },
+        platform: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        deviations: {
+            type: GraphQLString
         }
     })
 });
@@ -215,7 +246,6 @@ export const schema = new GraphQLSchema({
                 },
                 resolve: (root, {id}, source) => lineInfo(id)
             }
-
         }
     })
 });

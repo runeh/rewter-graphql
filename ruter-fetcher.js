@@ -1,6 +1,9 @@
 import rp from 'request-promise';
 import {toLatLon} from 'utm';
+import LRU from 'lru-cache';
 
+
+const cache = LRU();
 const baseUrl = 'https://reisapi.ruter.no';
 
 
@@ -30,8 +33,19 @@ function parseLineInfo(info) {
 }
 
 
-function getJson(url) {
-    return rp({ uri: url, json: true });
+function getJson(url, query) {
+    if (!query) {
+        const data = cache.get(url);
+        if (data) { 
+            console.log("cache hit!")
+            return data;
+        } 
+    }
+    const response = rp({ uri: url, json: true, qs: query });
+    if (!query) {
+        cache.set(url, response)
+    }
+    return response;
 }
 
 export function linesForStop(id) {
@@ -43,9 +57,7 @@ export function linesForStop(id) {
 export function stopsForLine(id) {
     console.log("fetchin stops for line", id);
     return getJson(`${baseUrl}/Line/GetStopsByLineID/${id}`)
-        .then(function(e) {
-            return e.map(parseStopInfo)
-        });
+        .then(e => e.map(parseStopInfo))
 }
 
 export function lineInfo(id) {
@@ -59,4 +71,41 @@ export function stopInfo(id) {
     return getJson(`${baseUrl}/Place/GetStop/${id}`)
             .then(parseStopInfo);
 }
+
+function parseVisit(e) { 
+    return {
+        stopId: parseInt(e.MonitoringRef, 10),
+        lineId: parseInt(e.MonitoredVehicleJourney.LineRef),
+        destinationName: e.MonitoredVehicleJourney.DestinationName,
+        name: e.MonitoredVehicleJourney.PublishedLineName,
+        direction: e.MonitoredVehicleJourney.DirectionRef,
+        recordedAtTime: new Date(e.RecordedAtTime).toString(),
+        expectedArrival: new Date(e.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime).toString(),
+        deviations: e.Extensions.Deviations,
+        lineColour: e.Extensions.LineColour,
+        platform: e.MonitoredVehicleJourney.MonitoredCall.DeparturePlatformName,
+    };
+}
+
+export function stopVisits(id, types, lines) {
+    console.log("fetchin stop info for", id);
+    return getJson(
+        `${baseUrl}/StopVisit/GetDepartures/${id}`,
+        {transporttypes: types, linenames: lines}
+    ).then(e => e.map(parseVisit))
+
+
+
+}
+
+
+
+
+
+
+
+// GET StopVisit/GetDepartures/{id}?datetime={datetime}&transporttypes={transporttypes}&linenames={linenames}
+
+
+
 
