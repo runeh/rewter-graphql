@@ -70,24 +70,24 @@ const PlaceType = new GraphQLEnumType({
 const PlaceInterface = new GraphQLInterfaceType({
     name: 'PlaceInterface',
     description: 'A place of some kind',
-    fields: () => ({
-        id: {
+    fields: {
+       id: {
             type: new GraphQLNonNull(GraphQLInt),
-            description: 'place id'
+            description: 'Unique ID for a place'
         },
         name: {
             type: new GraphQLNonNull(GraphQLString),
-            description: 'place name'
+            description: 'Name of place'
         },
         district: {
             type: new GraphQLNonNull(GraphQLString),
-            description: 'place district'
+            description: 'District place belongs to'
         },
         placeType: {
             type: new GraphQLNonNull(PlaceType),
-            description: 'place type'
+            description: 'Type of place'
         }
-    })
+    }
 });
 
 const GeoLocation = new GraphQLObjectType({
@@ -162,27 +162,27 @@ const Stop = new GraphQLObjectType({
     interfaces: [ PlaceInterface ],
     isTypeOf: e => e.placeType == "Stop", // fixme, use enum somehow
     fields: () => ({
+
+        // fields for PlaceInterface
         id: {
             type: new GraphQLNonNull(GraphQLInt),
-            description: 'stop id'
         },
         name: {
             type: new GraphQLNonNull(GraphQLString),
-            description: 'desc'
         },
+        placeType: {
+            type: new GraphQLNonNull(PlaceType),
+        },
+        district: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+
+        // Other fields
         shortName: {
             type: new GraphQLNonNull(GraphQLString),
             description: 'desc'
         },
         zone: {
-            type: new GraphQLNonNull(GraphQLString),
-            description: 'desc'
-        },
-        placeType: {
-            type: new GraphQLNonNull(PlaceType),
-            description: 'desc'
-        },
-        district: {
             type: new GraphQLNonNull(GraphQLString),
             description: 'desc'
         },
@@ -295,19 +295,19 @@ const Place = new GraphQLObjectType({
     fields: () => ({
         id: {
             type: new GraphQLNonNull(GraphQLInt),
-            description: 'place id'
+            description: 'Unique ID for a place'
         },
         name: {
             type: new GraphQLNonNull(GraphQLString),
-            description: 'place name'
+            description: 'Name of place'
         },
         district: {
             type: new GraphQLNonNull(GraphQLString),
-            description: 'place district'
+            description: 'District place belongs to'
         },
         placeType: {
             type: new GraphQLNonNull(PlaceType),
-            description: 'place type'
+            description: 'Type of place'
         }
     })
 });

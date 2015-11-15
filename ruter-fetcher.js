@@ -67,6 +67,7 @@ function parsePlace(e) {
 
 function getJson(url, query) {
     const key = url + ":" + JSON.stringify(query || {});
+    console.log(key)
     const data = cache.get(key);
     if (data) { 
         console.log("cache hit!")
@@ -74,9 +75,7 @@ function getJson(url, query) {
     } 
 
     const response = rp({ uri: url, json: true, qs: query });
-    if (!query) {
-        cache.set(key, response)
-    }
+    cache.set(key, response)
     return response;
 }
 
