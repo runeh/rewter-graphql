@@ -70,6 +70,17 @@ export function stopInfo(id) {
             .then(parseStopInfo);
 }
 
+function parseDeviations(e) {
+    return e ? e.map(parseDeviation) : [];
+}
+
+function parseDeviation(e) {
+    return { 
+        id: e.ID,
+        header: e.Header
+    };
+}
+
 function parseVisit(e) { 
     return {
         stopId: parseInt(e.MonitoringRef, 10),
@@ -79,7 +90,7 @@ function parseVisit(e) {
         direction: e.MonitoredVehicleJourney.DirectionRef,
         recordedAtTime: new Date(e.RecordedAtTime).toString(),
         expectedArrival: new Date(e.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime).toString(),
-        deviations: e.Extensions.Deviations,
+        deviations: parseDeviations(e.Extensions.Deviations),
         lineColour: e.Extensions.LineColour,
         platform: e.MonitoredVehicleJourney.MonitoredCall.DeparturePlatformName,
     };

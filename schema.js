@@ -34,7 +34,7 @@ const TransitType = new GraphQLEnumType({
             description: 'Bus'
         },
         SUBWAY: {
-            value: 6,
+            value: 8,
             description: 'Subway'
         },
         FERRY: {
@@ -140,6 +140,20 @@ const Line = new GraphQLObjectType({
         }
     }),
     interfaces: [ ]
+});
+
+const Deviation = new GraphQLObjectType({
+    name: 'Deviation',
+    description: 'Notice about a deviation from regular service',
+    fields: {
+        id: {
+            type: new GraphQLNonNull(GraphQLInt),
+        },
+        header: {
+            type: new GraphQLNonNull(GraphQLString),
+            description: "Short summary of deviation"
+        }
+    }
 });
 
 const Stop = new GraphQLObjectType({
@@ -265,7 +279,7 @@ const StopVisit = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLString)
         },
         deviations: {
-            type: GraphQLString
+            type: new GraphQLList(Deviation)
         }
     })
 });
