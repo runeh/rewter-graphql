@@ -2,7 +2,6 @@ import rp from 'request-promise';
 import {toLatLon} from 'utm';
 import LRU from 'lru-cache';
 
-
 const cache = LRU();
 const baseUrl = 'https://reisapi.ruter.no';
 
@@ -31,7 +30,6 @@ function parseLineInfo(info) {
         color: info.LineColour
     };
 }
-
 
 function getJson(url, query) {
     if (!query) {
@@ -92,20 +90,8 @@ export function stopVisits(id, types, lines) {
     return getJson(
         `${baseUrl}/StopVisit/GetDepartures/${id}`,
         {transporttypes: types, linenames: lines}
-    ).then(e => e.map(parseVisit))
-
-
+    ).then(e => e.map(parseVisit));
 
 }
-
-
-
-
-
-
-
-// GET StopVisit/GetDepartures/{id}?datetime={datetime}&transporttypes={transporttypes}&linenames={linenames}
-
-
 
 
