@@ -32,16 +32,16 @@ function parseLineInfo(info) {
 }
 
 function getJson(url, query) {
-    if (!query) {
-        const data = cache.get(url);
-        if (data) { 
-            console.log("cache hit!")
-            return data;
-        } 
-    }
+    const key = url + ":" + JSON.stringify(query || {});
+    const data = cache.get(key);
+    if (data) { 
+        console.log("cache hit!")
+        return data;
+    } 
+
     const response = rp({ uri: url, json: true, qs: query });
     if (!query) {
-        cache.set(url, response)
+        cache.set(key, response)
     }
     return response;
 }
@@ -85,13 +85,31 @@ function parseVisit(e) {
     };
 }
 
-export function stopVisits(id, types, lines) {
+export function stopVisits(id, transporttypes, linenames) {
     console.log("fetchin stop info for", id);
     return getJson(
-        `${baseUrl}/StopVisit/GetDepartures/${id}`,
-        {transporttypes: types, linenames: lines}
+        `${baseUrl}/StopVisit/GetDepartures/${id}`, {transporttypes, linenames}
     ).then(e => e.map(parseVisit));
 
 }
 
+function parsePlace(e) {
+    //console.log(e);
+    const x = {
+        id: e.ID,
+        name: e.Name,
+        district: e.District,
+        placeType: e.PlaceType
+    }
+    console.log(x)
+    return x
+}
+
+export function placesForName(name, counties) {
+    console.log("fetchin places for", name);
+    return getJson(
+        `${baseUrl}/Place/GetPlaces/${name}`, {counties}
+    ).then(e => e.map(parsePlace));
+
+}
 

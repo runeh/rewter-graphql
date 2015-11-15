@@ -1,16 +1,23 @@
-import {stopInfo, lineInfo, linesForStop, stopsForLine, stopVisits} from './ruter-fetcher';
+import {
+    stopInfo,
+    lineInfo,
+    linesForStop,
+    stopsForLine,
+    stopVisits,
+    placesForName
+} from './ruter-fetcher';
 
 import {
-  GraphQLEnumType,
-  GraphQLInterfaceType,
-  GraphQLObjectType,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLSchema,
-  GraphQLString,
-  GraphQLInt,
-  GraphQLFloat,
-  GraphQLBoolean,
+    GraphQLEnumType,
+    GraphQLInterfaceType,
+    GraphQLObjectType,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLSchema,
+    GraphQLString,
+    GraphQLInt,
+    GraphQLFloat,
+    GraphQLBoolean,
 } from 'graphql';
 
 
@@ -216,6 +223,32 @@ const StopVisit = new GraphQLObjectType({
 });
 
 
+const Place = new GraphQLObjectType({
+    name: 'Place',
+    description: 'A place of some kind',
+    fields: () => ({
+        id: {
+            type: new GraphQLNonNull(GraphQLInt),
+            description: 'place id'
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString),
+            description: 'place name'
+        },
+        district: {
+            type: new GraphQLNonNull(GraphQLString),
+            description: 'place district'
+        },
+        placeType: {
+            type: new GraphQLNonNull(GraphQLString),
+            description: 'place type'
+        }
+    })
+})
+
+
+
+
 export const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
         name: 'Query',
@@ -245,6 +278,17 @@ export const schema = new GraphQLSchema({
                     id: { name: 'id', type: new GraphQLNonNull(GraphQLInt) }
                 },
                 resolve: (root, {id}, source) => lineInfo(id)
+            },
+            places: {
+                type: new GraphQLList(Place),
+                args: {
+                    name: {
+                        name: 'name',
+                        type: new GraphQLNonNull(GraphQLString)
+                    }
+                },
+                resolve: (root, {name}) => placesForName(name)
+
             }
         }
     })
