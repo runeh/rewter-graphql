@@ -67,6 +67,29 @@ const PlaceType = new GraphQLEnumType({
     }
 });
 
+const PlaceInterface = new GraphQLInterfaceType({
+    name: 'PlaceInterface',
+    description: 'A place of some kind',
+    fields: () => ({
+        id: {
+            type: new GraphQLNonNull(GraphQLInt),
+            description: 'place id'
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString),
+            description: 'place name'
+        },
+        district: {
+            type: new GraphQLNonNull(GraphQLString),
+            description: 'place district'
+        },
+        placeType: {
+            type: new GraphQLNonNull(PlaceType),
+            description: 'place type'
+        }
+    })
+});
+
 const GeoLocation = new GraphQLObjectType({
     name: 'GeoLocation',
     description: 'geo type',
@@ -122,6 +145,8 @@ const Line = new GraphQLObjectType({
 const Stop = new GraphQLObjectType({
     name: 'Stop',
     description: 'A stop',
+    interfaces: [ PlaceInterface ],
+    isTypeOf: e => e.placeType == "Stop", // fixme, use enum somehow
     fields: () => ({
         id: {
             type: new GraphQLNonNull(GraphQLInt),
@@ -140,7 +165,7 @@ const Stop = new GraphQLObjectType({
             description: 'desc'
         },
         placeType: {
-            type: GraphQLString,
+            type: new GraphQLNonNull(PlaceType),
             description: 'desc'
         },
         district: {
@@ -246,9 +271,13 @@ const StopVisit = new GraphQLObjectType({
 });
 
 
+
 const Place = new GraphQLObjectType({
     name: 'Place',
     description: 'A place of some kind',
+    interfaces: [ PlaceInterface ],
+    isTypeOf: e => e.placeType != "Stop", // fixme, use enum somehow
+
     fields: () => ({
         id: {
             type: new GraphQLNonNull(GraphQLInt),
@@ -267,9 +296,7 @@ const Place = new GraphQLObjectType({
             description: 'place type'
         }
     })
-})
-
-
+});
 
 
 export const schema = new GraphQLSchema({
@@ -303,15 +330,15 @@ export const schema = new GraphQLSchema({
                 resolve: (root, {id}, source) => lineInfo(id)
             },
             places: {
-                type: new GraphQLList(Place),
+                type: new GraphQLList(PlaceInterface),
                 args: {
                     name: {
                         name: 'name',
                         type: new GraphQLNonNull(GraphQLString)
                     }
+                    // add counties and type
                 },
                 resolve: (root, {name}) => placesForName(name)
-
             }
         }
     })

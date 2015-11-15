@@ -18,7 +18,7 @@ function parseStopInfo(info) {
         utmLocation: {x: info.X, y: info.Y},
         isHub: info.IsHub,
         district: info.District,
-        placeType: info.PlaceType
+        placeType: info.PlaceType || "Stop"
     };
 }
 
