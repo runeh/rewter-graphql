@@ -349,10 +349,20 @@ export const schema = new GraphQLSchema({
                     name: {
                         name: 'name',
                         type: new GraphQLNonNull(GraphQLString)
+                    },
+                    type: {
+                        name: 'type',
+                        type: new GraphQLList(PlaceType)
                     }
                     // add counties and type
                 },
-                resolve: (root, {name}) => placesForName(name)
+                resolve: (root, {name, type}) => {
+                    let p = placesForName(name);
+                    if (type) {
+                        p = p.then(e => e.filter(y => type.indexOf(y.placeType) != -1));
+                    }
+                    return p;
+                }
             }
         }
     })
