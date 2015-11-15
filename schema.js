@@ -44,6 +44,29 @@ const TransitType = new GraphQLEnumType({
     }
 });
 
+const PlaceType = new GraphQLEnumType({
+    name: 'PlaceType',
+    description: 'A kind of place',
+    values: {
+        AREA: {
+            value: "Area",
+            description: "An area"
+        },
+        STOP: {
+            value: "Stop",
+            description: "A public transportation stop"
+        },
+        STREET: {
+            value: "Street",
+            description: "A street"
+        },
+        POI: {
+            value: "POI",
+            description: "Point of interest"
+        }
+    }
+});
+
 const GeoLocation = new GraphQLObjectType({
     name: 'GeoLocation',
     description: 'geo type',
@@ -240,7 +263,7 @@ const Place = new GraphQLObjectType({
             description: 'place district'
         },
         placeType: {
-            type: new GraphQLNonNull(GraphQLString),
+            type: new GraphQLNonNull(PlaceType),
             description: 'place type'
         }
     })
