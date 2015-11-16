@@ -66,6 +66,7 @@ function parsePlace(e) {
 }
 
 function getJson(url, query) {
+    console.log("fetching url")
     const key = url + ":" + JSON.stringify(query || {});
     console.log(key)
     const data = cache.get(key);
@@ -80,31 +81,31 @@ function getJson(url, query) {
 }
 
 export function linesForStop(id) {
-    console.log("fetchin lines for stop", id);
+    console.log("fetching lines for stop", id);
     return getJson(`${baseUrl}/Line/GetLinesByStopID/${id}`)
                .then(e => e.map(parseLineInfo));
 }
 
 export function stopsForLine(id) {
-    console.log("fetchin stops for line", id);
+    console.log("fetching stops for line", id);
     return getJson(`${baseUrl}/Line/GetStopsByLineID/${id}`)
         .then(e => e.map(parseStopInfo))
 }
 
 export function lineInfo(id) {
-    console.log("fetchin lines info for", id);
+    console.log("fetching lines info for", id);
     return getJson(`${baseUrl}/Line/GetDataByLineID/${id}`)
         .then(parseLineInfo);
 }
 
 export function stopInfo(id) {
-    console.log("fetchin stop info for", id);
+    console.log("fetching stop info for", id);
     return getJson(`${baseUrl}/Place/GetStop/${id}`)
             .then(parseStopInfo);
 }
 
 export function stopVisits(id, transporttypes, linenames) {
-    console.log("fetchin stop info for", id);
+    console.log("fetching stop info for", id);
     return getJson(
         `${baseUrl}/StopVisit/GetDepartures/${id}`, {transporttypes, linenames}
     ).then(e => e.map(parseVisit));
@@ -112,8 +113,16 @@ export function stopVisits(id, transporttypes, linenames) {
 }
 
 export function placesForName(name, counties) {
-    console.log("fetchin places for", name);
+    console.log("fetching places for", name);
     return getJson(
         `${baseUrl}/Place/GetPlaces/${name}`, {counties}
     ).then(e => e.map(parsePlace));
+}
+
+export function closestStops(x, y, maxDistance) {
+    const url = `${baseUrl}/Place/GetClosestStops`;
+    const query = {
+        coordinates: `(X=${x},Y=${y})`
+    }
+    return getJson(url, query).then(e =>  e.map(parseStopInfo));
 }

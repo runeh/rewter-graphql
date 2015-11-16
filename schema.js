@@ -4,12 +4,14 @@ import {
     linesForStop,
     stopsForLine,
     stopVisits,
-    placesForName
+    placesForName,
+    closestStops
 } from './ruter-fetcher';
 
 import {
     GraphQLEnumType,
     GraphQLInterfaceType,
+    GraphQLInputObjectType,
     GraphQLObjectType,
     GraphQLList,
     GraphQLNonNull,
@@ -19,6 +21,36 @@ import {
     GraphQLFloat,
     GraphQLBoolean,
 } from 'graphql';
+
+import {fromLatLon} from 'utm';
+
+
+const GeoLocationInput = new GraphQLInputObjectType({
+  name: 'GeoLocationInput',
+  fields: {
+    lat: { type: new GraphQLNonNull(GraphQLFloat) },
+    lng: { type: new GraphQLNonNull(GraphQLFloat) },
+  }
+});
+
+const UtmLocationInput = new GraphQLInputObjectType({
+  name: 'UtmLocationInput',
+  fields: {
+    x: { type: new GraphQLNonNull(GraphQLFloat) },
+    y: { type: new GraphQLNonNull(GraphQLFloat) },
+  }
+});
+
+const HybridLocationInput = new GraphQLInputObjectType({
+  name: 'UtmLocationInput',
+  description: "Either UTM, with .x and .y, or .lat and .lon. Exists because UnionTypes are not InputObjectTypes yet",
+  fields: {
+    lat: { type: GraphQLFloat },
+    lng: { type: GraphQLFloat },
+    x: { type: GraphQLFloat },
+    y: { type: GraphQLFloat }
+  }
+});
 
 
 const TransitType = new GraphQLEnumType({
@@ -313,6 +345,21 @@ const Place = new GraphQLObjectType({
 });
 
 
+function ensureUtmInHybridPosition(pos) {
+    if (pos.x && pos.y) {
+        return pos
+    }
+    else if (pos.lat && pos.lng) {
+        const {x, y} = fromLatLon(pos.lat, pos.lng)
+        pos.x = x;
+        pos.y = y;
+        return pos
+    }
+    else {
+        throw new Error("bad invariant. Need either x and y or lat and lng on a HybridPosition")
+    }
+}
+
 export const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
         name: 'Query',
@@ -362,6 +409,25 @@ export const schema = new GraphQLSchema({
                         p = p.then(e => e.filter(y => type.indexOf(y.placeType) != -1));
                     }
                     return p;
+                }
+            },
+
+            clostsStops: {
+                type: new GraphQLList(Stop),
+                args: {
+                    location: {
+                        name: "location",
+                        type: new GraphQLNonNull(HybridLocationInput)
+                    },
+                    maxDistance: {
+                        names: "maxDistance",
+                        type: GraphQLInt
+                    }
+                    // proposals as well?
+                },
+                resolve: (root, {location}) => {
+                    ensureUtmInHybridPosition(location);
+                    return closestStops(location.x, location.y)
                 }
             }
         }
