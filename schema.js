@@ -5,7 +5,8 @@ import {
     stopsForLine,
     stopVisits,
     placesForName,
-    closestStops
+    closestStops,
+    areaStops
 } from './ruter-fetcher';
 
 import {
@@ -42,7 +43,7 @@ const UtmLocationInput = new GraphQLInputObjectType({
 });
 
 const HybridLocationInput = new GraphQLInputObjectType({
-  name: 'UtmLocationInput',
+  name: 'HybridLocationInput',
   description: "Either UTM, with .x and .y, or .lat and .lon. Exists because UnionTypes are not InputObjectTypes yet",
   fields: {
     lat: { type: GraphQLFloat },
@@ -248,8 +249,6 @@ const Stop = new GraphQLObjectType({
                 }
             },
             resolve: ({id: stopId}, {transitType, id: lineId}) => {
-                console.log('ergs', transitType, lineId)
-
                 let p = linesForStop(stopId);
 
                 if (transitType) {
@@ -258,7 +257,6 @@ const Stop = new GraphQLObjectType({
 
                 if (lineId) {
                     p = p.then(e => {
-                        console.log(e);
                         return e.filter(y => lineId.indexOf(y.id) != -1 );
                     })
                 }
@@ -271,9 +269,7 @@ const Stop = new GraphQLObjectType({
             type: new GraphQLList(StopVisit),
             description: 'Pending visits for stop. This is the reealtime info',
             resolve: function({id}) {
-                console.log(id);
-                return stopVisits(id)
-                return null
+                return stopVisits(id);
             }
         }
     })
@@ -316,8 +312,6 @@ const StopVisit = new GraphQLObjectType({
     })
 });
 
-
-
 const Place = new GraphQLObjectType({
     name: 'Place',
     description: 'A place of some kind',
@@ -350,9 +344,9 @@ function ensureUtmInHybridPosition(pos) {
         return pos
     }
     else if (pos.lat && pos.lng) {
-        const {x, y} = fromLatLon(pos.lat, pos.lng)
-        pos.x = x;
-        pos.y = y;
+        const {easting, northing} = fromLatLon(pos.lat, pos.lng)
+        pos.x = parseInt(easting);
+        pos.y = parseInt(northing);
         return pos
     }
     else {
@@ -412,7 +406,7 @@ export const schema = new GraphQLSchema({
                 }
             },
 
-            clostsStops: {
+            pointStops: {
                 type: new GraphQLList(Stop),
                 args: {
                     location: {
@@ -429,8 +423,27 @@ export const schema = new GraphQLSchema({
                     ensureUtmInHybridPosition(location);
                     return closestStops(location.x, location.y)
                 }
+            },
+
+            areaStops: {
+                type: new GraphQLList(Stop),
+                args: {
+                    sw: {
+                        name: "sw",
+                        type: new GraphQLNonNull(HybridLocationInput)
+                    },
+                    ne: {
+                        name: "ne",
+                        type: new GraphQLNonNull(HybridLocationInput)
+                    },
+                },
+                resolve: (root, {sw, ne}) => {
+                    ensureUtmInHybridPosition(sw);
+                    ensureUtmInHybridPosition(ne);
+                    return areaStops(sw, ne)
+                }
+
             }
         }
     })
 });
-

@@ -66,14 +66,15 @@ function parsePlace(e) {
 }
 
 function getJson(url, query) {
-    console.log("fetching url")
     const key = url + ":" + JSON.stringify(query || {});
-    console.log(key)
     const data = cache.get(key);
     if (data) { 
-        console.log("cache hit!")
+        console.log("cache hit:  ", key);
         return data;
     } 
+    else {
+        console.log("cache miss: ", key);
+    }
 
     const response = rp({ uri: url, json: true, qs: query });
     cache.set(key, response)
@@ -126,3 +127,15 @@ export function closestStops(x, y, maxDistance) {
     }
     return getJson(url, query).then(e =>  e.map(parseStopInfo));
 }
+
+export function areaStops(sw, ne) {
+    const url = `${baseUrl}/Place/GetStopsByArea`;
+    const query = {
+        xmin: sw.x,
+        ymin: sw.y,
+        xmax: ne.x,
+        ymax: ne.y
+    }
+    return getJson(url, query).then(e =>  e.map(parseStopInfo));
+}
+
