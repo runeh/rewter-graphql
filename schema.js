@@ -329,10 +329,8 @@ function visitsToLines(visits) {
     const lineVisits = values(groupBy(grouper, visits));
     const lineInfo = lineVisits
                         .map(head)
-                        .map(({stopId, lineId, name, destinationName}) => ({stopId, lineId, name, destinationName}));
-
-    return zip(lineInfo, lineVisits)
-                .map(([i, v]) => assoc('visits', v, i));
+                        .map(pick(['stopId', 'lineId', 'name', 'destinationName']));
+    return zip(lineInfo, lineVisits).map(([i, v]) => assoc('visits', v, i));
 }
 
 const RealtimePlatform = new GraphQLObjectType({
