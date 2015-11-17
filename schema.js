@@ -27,15 +27,11 @@ import {
     assoc,
     groupBy,
     head,
-    identity,
     map as mapObj,
     map,
-    path,
     pick,
     prop,
-    sortBy,
     toPairs,
-    uniq,
     values,
     zip
 } from 'ramda';
@@ -298,8 +294,8 @@ const Stop = new GraphQLObjectType({
 });
 
 
-const RealtimeLine = new GraphQLObjectType({
-    name: 'RealtimeLine',
+const RealtimeDestination = new GraphQLObjectType({
+    name: 'RealtimeDestination',
     description: 'A line, as reprsented by the realtime system',
     fields: () => ({
         // also pointer to actual line?
@@ -324,7 +320,7 @@ const RealtimeLine = new GraphQLObjectType({
     })
 });
 
-function visitsToLines(visits) {
+function visitsToDestinations(visits) {
     const grouper = e => `${e.line}:${e.destinationName}`;
     const lineVisits = values(groupBy(grouper, visits));
     const lineInfo = lineVisits
@@ -343,9 +339,9 @@ const RealtimePlatform = new GraphQLObjectType({
         visits: {
             type: new GraphQLList(RealtimeVisit)
         },
-        lines: {
-            type: new GraphQLList(RealtimeLine),
-            resolve: ({visits}) => visitsToLines(visits)
+        destinations: {
+            type: new GraphQLList(RealtimeDestination),
+            resolve: ({visits}) => visitsToDestinations(visits)
         }
     })
 });
