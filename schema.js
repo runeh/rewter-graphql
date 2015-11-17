@@ -26,6 +26,7 @@ import {
 import {
     assoc,
     groupBy,
+    head,
     identity,
     map as mapObj,
     map,
@@ -36,6 +37,7 @@ import {
     toPairs,
     uniq,
     values,
+    zip
 } from 'ramda';
 
 import {fromLatLon} from 'utm';
@@ -290,7 +292,7 @@ const Stop = new GraphQLObjectType({
 
         realtime: {
             type: Realtime,
-            resolve: ({id: stopId}) => ({stopId, morradi: "mann"})
+            resolve: ({id}) => stopVisits(id)
         }
     })
 });
@@ -301,11 +303,16 @@ const RealtimeLine = new GraphQLObjectType({
     description: 'A line, as reprsented by the realtime system',
     fields: () => ({
         // also pointer to actual line?
+        // also pointer to actual stop?
         // also, deviations ?
+        // also, fix RealtimeVisit to be same as other visit stuff
         name: {
             type: new GraphQLNonNull(GraphQLString)
         },
-        id: {
+        lineId: {
+            type: new GraphQLNonNull(GraphQLInt)
+        },
+        stopId: {
             type: new GraphQLNonNull(GraphQLInt)
         },
         destinationName: {
@@ -316,6 +323,17 @@ const RealtimeLine = new GraphQLObjectType({
         }
     })
 });
+
+function visitsToLines(visits) {
+    const grouper = e => `${e.line}:${e.destinationName}`;
+    const lineVisits = values(groupBy(grouper, visits));
+    const lineInfo = lineVisits
+                        .map(head)
+                        .map(({stopId, lineId, name, destinationName}) => ({stopId, lineId, name, destinationName}));
+
+    return zip(lineInfo, lineVisits)
+                .map(([i, v]) => assoc('visits', v, i));
+}
 
 const RealtimePlatform = new GraphQLObjectType({
     name: 'RealtimePlatform',
@@ -329,58 +347,29 @@ const RealtimePlatform = new GraphQLObjectType({
         },
         lines: {
             type: new GraphQLList(RealtimeLine),
-            resolve: (a,b,c,d) => {
-                console.log("bbb", a.morradi)
-                console.log(a)
-                // console.log(b)
-                // console.log(c)
-                // console.log(d)
-                
-                return [];                
-
-            }
+            resolve: ({visits}) => visitsToLines(visits)
         }
-        // stop
-        // realtimeLines
     })
 });
 
 function platformsFromVisits(visits) {
-    visits = visits.filter(e => e.platform)
-    const platformVisits = groupBy(prop('platform'))(visits);
-    // const platformLines = 
-
-
+    visits = visits.filter(prop('platform'));
+    const platformVisits = groupBy(prop('platform'), visits);
     return toPairs(platformVisits)
             .map(([name, visits]) => ({name, visits}));
-}
-
-function lineVisits(visits) {
-    visits = groupBy(prop('l'))
 }
 
 const Realtime = new GraphQLObjectType({
     name: 'Realtime',
     description: 'Bag of holding for realtime info attached to a stop',
     fields: () => ({
-        stopId: {
-            type: new GraphQLNonNull(GraphQLInt),
-        },
         visits: {
             type: new GraphQLList(RealtimeVisit),
-            resolve: ({id, morradi}) => {
-                console.log("walalala", morradi)
-                return [];
-            }
+            resolve: (visits) => visits
         },
         platforms: {
             type: new GraphQLList(RealtimePlatform),
-            resolve: ({stopId, morradi}) => {
-                console.log("walalala", morradi)
-                console.log("the stopid", stopId)
-                return stopVisits(stopId)
-                            .then(platformsFromVisits)
-            }
+            resolve: (visits) => platformsFromVisits(visits)
         }
     })
 });
