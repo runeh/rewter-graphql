@@ -321,7 +321,7 @@ const RealtimeDestination = new GraphQLObjectType({
 });
 
 function visitsToDestinations(visits) {
-    const grouper = e => `${e.line}:${e.destinationName}`;
+    const grouper = e => `${e.lineId}:${e.destinationName}`;
     const lineVisits = values(groupBy(grouper, visits));
     const lineInfo = lineVisits
                         .map(head)
@@ -364,6 +364,10 @@ const Realtime = new GraphQLObjectType({
         platforms: {
             type: new GraphQLList(RealtimePlatform),
             resolve: (visits) => platformsFromVisits(visits)
+        },
+        destinations: {
+            type: new GraphQLList(RealtimeDestination),
+            resolve: (visits) => visitsToDestinations(visits)
         }
     })
 });
