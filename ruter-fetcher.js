@@ -110,7 +110,6 @@ export function stopVisits(id, transporttypes, linenames) {
     return getJson(
         `${baseUrl}/StopVisit/GetDepartures/${id}`, {transporttypes, linenames}
     ).then(e => e.map(parseVisit));
-
 }
 
 export function placesForName(name, counties) {

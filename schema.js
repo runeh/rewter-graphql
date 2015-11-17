@@ -23,6 +23,21 @@ import {
     GraphQLBoolean,
 } from 'graphql';
 
+import {
+    assoc,
+    groupBy,
+    identity,
+    map as mapObj,
+    map,
+    path,
+    pick,
+    prop,
+    sortBy,
+    toPairs,
+    uniq,
+    values,
+} from 'ramda';
+
 import {fromLatLon} from 'utm';
 
 
@@ -271,10 +286,122 @@ const Stop = new GraphQLObjectType({
             resolve: function({id}) {
                 return stopVisits(id);
             }
+        },
+
+        realtime: {
+            type: Realtime,
+            resolve: ({id: stopId}) => ({stopId, morradi: "mann"})
         }
     })
 });
 
+
+const RealtimeLine = new GraphQLObjectType({
+    name: 'RealtimeLine',
+    description: 'A line, as reprsented by the realtime system',
+    fields: () => ({
+        // also pointer to actual line?
+        // also, deviations ?
+        name: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        id: {
+            type: new GraphQLNonNull(GraphQLInt)
+        },
+        destinationName: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        visits: {
+            type: new GraphQLList(RealtimeVisit)
+        }
+    })
+});
+
+const RealtimePlatform = new GraphQLObjectType({
+    name: 'RealtimePlatform',
+    description: 'A platform connected to a stop, valid for realtime departure info only, thus volatile based on time of day etc.',
+    fields: () => ({
+        name: {
+            type: GraphQLString
+        },
+        visits: {
+            type: new GraphQLList(RealtimeVisit)
+        },
+        lines: {
+            type: new GraphQLList(RealtimeLine),
+            resolve: (a,b,c,d) => {
+                console.log("bbb", a.morradi)
+                console.log(a)
+                // console.log(b)
+                // console.log(c)
+                // console.log(d)
+                
+                return [];                
+
+            }
+        }
+        // stop
+        // realtimeLines
+    })
+});
+
+function platformsFromVisits(visits) {
+    visits = visits.filter(e => e.platform)
+    const platformVisits = groupBy(prop('platform'))(visits);
+    // const platformLines = 
+
+
+    return toPairs(platformVisits)
+            .map(([name, visits]) => ({name, visits}));
+}
+
+function lineVisits(visits) {
+    visits = groupBy(prop('l'))
+}
+
+const Realtime = new GraphQLObjectType({
+    name: 'Realtime',
+    description: 'Bag of holding for realtime info attached to a stop',
+    fields: () => ({
+        stopId: {
+            type: new GraphQLNonNull(GraphQLInt),
+        },
+        visits: {
+            type: new GraphQLList(RealtimeVisit),
+            resolve: ({id, morradi}) => {
+                console.log("walalala", morradi)
+                return [];
+            }
+        },
+        platforms: {
+            type: new GraphQLList(RealtimePlatform),
+            resolve: ({stopId, morradi}) => {
+                console.log("walalala", morradi)
+                console.log("the stopid", stopId)
+                return stopVisits(stopId)
+                            .then(platformsFromVisits)
+            }
+        }
+    })
+});
+
+
+const RealtimeVisit = new GraphQLObjectType({
+    name: 'RealtimeVisit',
+    description: 'Realtime visit, that is realtime data for a transport visiting a stop',
+    fields: () => ({
+        expectedArrival: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+        destinationName: {
+            type: new GraphQLNonNull(GraphQLString),
+        }
+    })
+
+});
 
 const StopVisit = new GraphQLObjectType({
     name: 'StopVisit',
@@ -304,7 +431,7 @@ const StopVisit = new GraphQLObjectType({
             type: GraphQLString
         },
         platform: {
-            type: new GraphQLNonNull(GraphQLString)
+            type: GraphQLString
         },
         deviations: {
             type: new GraphQLList(Deviation)
@@ -442,7 +569,6 @@ export const schema = new GraphQLSchema({
                     ensureUtmInHybridPosition(ne);
                     return areaStops(sw, ne)
                 }
-
             }
         }
     })
