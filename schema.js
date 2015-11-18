@@ -278,13 +278,6 @@ const Stop = new GraphQLObjectType({
 
             }
         },
-        departures: {
-            type: new GraphQLList(StopVisit),
-            description: 'Pending visits for stop. This is the reealtime info',
-            resolve: function({id}) {
-                return stopVisits(id);
-            }
-        },
 
         realtime: {
             type: Realtime,
@@ -385,34 +378,6 @@ const RealtimeVisit = new GraphQLObjectType({
         },
         destinationName: {
             type: new GraphQLNonNull(GraphQLString),
-        }
-    })
-
-});
-
-const StopVisit = new GraphQLObjectType({
-    name: 'StopVisit',
-    description: 'Stop visit',
-    fields: () => ({
-        expectedArrival: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-        name: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-        destinationName: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-        stop: {
-            type: new GraphQLNonNull(Stop),
-            resolve: ({stopId}) => stopInfo(stopId)
-        },
-        line: {
-            type: new GraphQLNonNull(Line),
-            resolve: ({lineId}) => lineInfo(lineId)
-        },
-        destinationName: {
-            type: new GraphQLNonNull(GraphQLString)
         },
         direction: {
             type: GraphQLString
@@ -422,9 +387,19 @@ const StopVisit = new GraphQLObjectType({
         },
         deviations: {
             type: new GraphQLList(Deviation)
+        },
+        stop: {
+            type: new GraphQLNonNull(Stop),
+            resolve: ({stopId}) => stopInfo(stopId)
+        },
+        line: {
+            type: new GraphQLNonNull(Line),
+            resolve: ({lineId}) => lineInfo(lineId)
         }
     })
+
 });
+
 
 const Place = new GraphQLObjectType({
     name: 'Place',
