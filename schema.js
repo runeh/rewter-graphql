@@ -26,12 +26,16 @@ import {
 import {
     assoc,
     groupBy,
+    flatten,
     head,
     map as mapObj,
     map,
     pick,
+    pipe,
+    pluck,
     prop,
     toPairs,
+    uniq,
     values,
     zip
 } from 'ramda';
@@ -289,36 +293,45 @@ const Stop = new GraphQLObjectType({
 
 const RealtimeDestination = new GraphQLObjectType({
     name: 'RealtimeDestination',
-    description: 'A line, as reprsented by the realtime system',
+    description: 'A line, as represented by the realtime system',
     fields: () => ({
-        // also pointer to actual line?
-        // also pointer to actual stop?
         // also, deviations ?
-        // also, fix RealtimeVisit to be same as other visit stuff
         name: {
             type: new GraphQLNonNull(GraphQLString)
         },
-        lineId: {
-            type: new GraphQLNonNull(GraphQLInt)
+        stop: {
+            type: new GraphQLNonNull(Stop),
+            resolve: ({stopId}) => stopInfo(stopId)
         },
-        stopId: {
-            type: new GraphQLNonNull(GraphQLInt)
+        line: {
+            type: new GraphQLNonNull(Line),
+            resolve: ({lineId}) => lineInfo(lineId)
+        },
+        color: {
+            type: new GraphQLNonNull(GraphQLString),
+            resolve: ({lineColour}) => "#" + lineColour
         },
         destinationName: {
             type: new GraphQLNonNull(GraphQLString)
         },
         visits: {
             type: new GraphQLList(RealtimeVisit)
+        },
+        deviations: {
+            type: new GraphQLList(Deviation),
+            resolve: ({visits}) => collectUniqueDeviations(visits)
         }
     })
 });
+
+const collectUniqueDeviations = pipe(pluck('deviations'), flatten, uniq);
 
 function visitsToDestinations(visits) {
     const grouper = e => `${e.lineId}:${e.destinationName}`;
     const lineVisits = values(groupBy(grouper, visits));
     const lineInfo = lineVisits
                         .map(head)
-                        .map(pick(['stopId', 'lineId', 'name', 'destinationName']));
+                        .map(pick(['stopId', 'lineId', 'name', 'destinationName', 'lineColour']));
     return zip(lineInfo, lineVisits).map(([i, v]) => assoc('visits', v, i));
 }
 
@@ -335,6 +348,10 @@ const RealtimePlatform = new GraphQLObjectType({
         destinations: {
             type: new GraphQLList(RealtimeDestination),
             resolve: ({visits}) => visitsToDestinations(visits)
+        },
+        deviations: {
+            type: new GraphQLList(Deviation),
+            resolve: ({visits}) => collectUniqueDeviations(visits)
         }
     })
 });
@@ -361,6 +378,10 @@ const Realtime = new GraphQLObjectType({
         destinations: {
             type: new GraphQLList(RealtimeDestination),
             resolve: (visits) => visitsToDestinations(visits)
+        },
+        deviations: {
+            type: new GraphQLList(Deviation),
+            resolve: (visits) => collectUniqueDeviations(visits)
         }
     })
 });
