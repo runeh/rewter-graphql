@@ -75,23 +75,43 @@ const TransitType = new GraphQLEnumType({
     name: 'TransitType',
     description: 'One of the types of transit operated by ruter',
     values: {
-        TRAM: {
-            value: 7,
-            description: 'Tram'
+        WALKING: {
+            value: 0,
+            description: 'Walking'
+        },
+        AIRPORT_BUS: {
+            value: 1,
+            description: 'Airport bus'
         },
         BUS: {
             value: 2,
             description: 'Bus'
         },
-        SUBWAY: {
-            value: 8,
-            description: 'Subway'
+        DUMMY: {
+            value: 3,
+            description: 'Dummy'
         },
-        FERRY: {
-            value: 1,
-            description: 'Ferry'
-        }
-    }
+        AIRPORT_TRAIN: {
+            value: 4,
+            description: 'Airport train'
+        },
+        BOAT: {
+            value: 5,
+            description: 'Boat'
+        },
+        TRAIN: {
+            value: 6,
+            description: 'Train'
+        },
+        TRAM: {
+            value: 7,
+            description: 'Tram'
+        },
+        METRO: {
+            value: 8,
+            description: 'Metro'
+        },
+     }
 });
 
 const PlaceType = new GraphQLEnumType({
@@ -314,6 +334,9 @@ const RealtimeDestination = new GraphQLObjectType({
         destinationName: {
             type: new GraphQLNonNull(GraphQLString)
         },
+        transitType: {
+            type: new GraphQLNonNull(TransitType)
+        },
         visits: {
             type: new GraphQLList(RealtimeVisit)
         },
@@ -331,7 +354,7 @@ function visitsToDestinations(visits) {
     const lineVisits = values(groupBy(grouper, visits));
     const lineInfo = lineVisits
                         .map(head)
-                        .map(pick(['stopId', 'lineId', 'name', 'destinationName', 'lineColour']));
+                        .map(pick(['stopId', 'lineId', 'name', 'destinationName', 'lineColour', 'transitType']));
     return zip(lineInfo, lineVisits).map(([i, v]) => assoc('visits', v, i));
 }
 
@@ -405,6 +428,18 @@ const RealtimeVisit = new GraphQLObjectType({
         },
         platform: {
             type: GraphQLString
+        },
+        lowFloor: {
+            type: new GraphQLNonNull(GraphQLBoolean)
+        },
+        inCongestion: {
+            type: new GraphQLNonNull(GraphQLBoolean)
+        },
+        monitored: {
+            type: new GraphQLNonNull(GraphQLBoolean)
+        },
+        transitType: {
+            type: new GraphQLNonNull(TransitType)
         },
         deviations: {
             type: new GraphQLList(Deviation)
