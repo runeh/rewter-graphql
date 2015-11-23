@@ -5,6 +5,18 @@ import LRU from 'lru-cache';
 const cache = LRU();
 const baseUrl = 'https://reisapi.ruter.no';
 
+// mapper between how transport type is represented in
+// realtime api and line api.
+// http://reisapi.ruter.no/Help/ResourceModel?modelName=VehicleModeEnum
+// http://reisapi.ruter.no/Help/ResourceModel?modelName=TransportationType
+const vehicleModeToTransportType = {
+    0: 2,
+    1: 5,
+    2: 6,
+    3: 7,
+    4: 8
+}
+
 function parseStopInfo(info) {
     return {
         id: info.ID,
@@ -41,7 +53,7 @@ function parseDeviation(e) {
     };
 }
 
-function parseVisit(e) { 
+function parseVisit(e) {
     return {
         stopId: parseInt(e.MonitoringRef, 10),
         lineId: parseInt(e.MonitoredVehicleJourney.LineRef),
@@ -53,6 +65,12 @@ function parseVisit(e) {
         deviations: parseDeviations(e.Extensions.Deviations),
         lineColour: e.Extensions.LineColour,
         platform: e.MonitoredVehicleJourney.MonitoredCall.DeparturePlatformName,
+        inCongestion: e.MonitoredVehicleJourney.InCongestion,
+        monitored: e.MonitoredVehicleJourney.Monitored,
+        transitType: vehicleModeToTransportType[e.MonitoredVehicleJourney.VehicleMode],
+        lowFloor: e.MonitoredVehicleJourney.VehicleFeatureRef 
+                    ? e.MonitoredVehicleJourney.VehicleFeatureRef == 'lowFloor'
+                    : false
     };
 }
 
