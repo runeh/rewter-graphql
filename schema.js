@@ -315,7 +315,6 @@ const RealtimeDestination = new GraphQLObjectType({
     name: 'RealtimeDestination',
     description: 'A line, as represented by the realtime system',
     fields: () => ({
-        // also, deviations ?
         name: {
             type: new GraphQLNonNull(GraphQLString)
         },
