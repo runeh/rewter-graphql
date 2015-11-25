@@ -156,3 +156,71 @@ export function areaStops(sw, ne) {
     return getJson(url, query).then(e =>  e.map(parseStopInfo));
 }
 
+function parseTravelPlans(plans) {
+    return plans.TravelProposals.map(parseTravelPlan);
+}
+
+function parseDurationString(duration) {
+    const [hours, mins, secs] = duration.split(":").map(e => parseInt(e));
+    return (hours * 60) + mins;
+}
+
+function parseTravelStage(stage) {
+    
+    const typedStage = stage.Transportation == 0
+             ? parseWalkingTravelStage(stage)
+             : parseTransitTravelStage(stage)
+
+    const x = Object.assign(typedStage, {
+        departureTime: stage.DepartureTime,
+        arrivalTime: stage.ArrivalTime,
+        travelTimeMins: parseDurationString(stage.TravelTime || stage.WalkingTime),
+        transitType: stage.Transportation
+    });
+
+
+    //console.log(x);
+    return x;
+}
+
+function parseWalkingTravelStage(stage) {
+    return {
+        pos: "todo"
+    }
+}
+
+function parseTransitTravelStage(stage) {
+    return {
+        line: stage.LineId,
+        destinationName: stage.Destination,
+        departureStop: parseStopInfo(stage.DepartureStop),
+        arrivalStop: parseStopInfo(stage.ArrivalStop),
+        lineName: stage.LineName,
+        color: stage.LineColour
+    }
+}
+
+function parseTravelPlan(plan) {
+    // console.log(plan);
+    return {
+        departureTime: plan.DepartureTime,
+        arrivalTime: plan.ArrivalTime,
+        travelTimeMins: parseDurationString(plan.TotalTravelTime),
+        remarks: plan.Remarks,
+        zones: [],
+        stages: plan.Stages.map(parseTravelStage)
+    }
+}
+
+export function getTravelPlan(origin, destination) {
+    console.log("fetching travel plan for");
+
+    const url = `${baseUrl}/Travel/GetTravels`;
+    const query = {
+        toplace: 3012510,
+        fromplace: 3010625,
+        isafter: true,
+        time: 26113015153000
+    };
+    return getJson(url, query).then(parseTravelPlans);
+}

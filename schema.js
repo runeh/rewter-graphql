@@ -6,7 +6,8 @@ import {
     stopVisits,
     placesForName,
     closestStops,
-    areaStops
+    areaStops,
+    getTravelPlan
 } from './ruter-fetcher';
 
 import {
@@ -483,6 +484,139 @@ const Place = new GraphQLObjectType({
 });
 
 
+
+
+
+const TravelProposal = new GraphQLObjectType({
+    name: 'TravelProposal',
+    description: 'A travel proposal',
+
+    fields: () => ({
+        departureTime: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        arrivalTime: {
+            type: new GraphQLNonNull(GraphQLString)            
+        },
+        travelTimeMins: {
+            type: new GraphQLNonNull(GraphQLInt)
+        },
+        remarks: {
+            type: new GraphQLList(GraphQLString)
+        },
+        zones: {
+            type: new GraphQLList(GraphQLString)
+        },
+        stages: {
+            type: new GraphQLList((TravelStageInterface))
+            //type: new GraphQLList(new GraphQLNonNull(TravelStageInterface))
+        }
+    })
+});
+
+
+const TravelStageInterface = new GraphQLInterfaceType({
+    name: 'TravelStageInterface',
+    description: 'A stage of a travel proposal',
+
+    fields: () => ({
+        departureTime: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        arrivalTime: {
+            type: new GraphQLNonNull(GraphQLString)            
+        },
+        travelTimeMins: {
+            type: new GraphQLNonNull(GraphQLInt)
+        },
+        transitType: {
+            type: new GraphQLNonNull(TransitType)
+        }
+    })
+});
+
+
+const WalkingTravelStage = new GraphQLObjectType({
+    name: 'WalkingTravelStage',
+    description: 'A travel stage that has to be walked',
+    interfaces: [ TravelStageInterface ],
+    isTypeOf: e => e.transitType == 0, // fixme, use enum somehow
+
+    fields: () => ({
+        // from TravelStageInterface:
+        departureTime: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        arrivalTime: {
+            type: new GraphQLNonNull(GraphQLString)            
+        },
+        travelTimeMins: {
+            type: new GraphQLNonNull(GraphQLInt)
+        },
+        transitType: {
+            type: new GraphQLNonNull(TransitType)
+        },
+        // own:
+
+        // arrival point and departure point
+
+    })
+})
+
+
+const TransitTravelStage = new GraphQLObjectType({
+    name: 'TransitTravelStage',
+    description: 'A stage of a travel proposal',
+    interfaces: [ TravelStageInterface ],
+    isTypeOf: e => e.transitType != 0, // fixme, use enum somehow
+
+    fields: () => ({
+        // from TravelStageInterface:
+        departureTime: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        arrivalTime: {
+            type: new GraphQLNonNull(GraphQLString)            
+        },
+        travelTimeMins: {
+            type: new GraphQLNonNull(GraphQLInt)
+        },
+        transitType: {
+            type: new GraphQLNonNull(TransitType)
+        },
+
+        // own:
+        // line: {
+        //     type: new GraphQLNonNull(Line)
+        // },
+        destinationName: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        lineName: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        color: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        departureStop: {
+            type: new GraphQLNonNull(Stop)
+        },
+        arrivalStop: {
+            type: new GraphQLNonNull(Stop)
+        },
+        line: {
+            type: new GraphQLNonNull(Line),
+            resolve: ({line}) => lineInfo(line)
+        }
+
+    })
+});
+
+
+
+
+
+
 function ensureUtmInHybridPosition(pos) {
     if (pos.x && pos.y) {
         return pos
@@ -586,7 +720,28 @@ export const schema = new GraphQLSchema({
                     ensureUtmInHybridPosition(ne);
                     return areaStops(sw, ne)
                 }
+            },
+
+            travelPlanner: {
+                type: new GraphQLList(TravelProposal),
+                // args: {
+                //     sw: {
+                //         name: "sw",
+                //         type: new GraphQLNonNull(HybridLocationInput)
+                //     },
+                //     ne: {
+                //         name: "ne",
+                //         type: new GraphQLNonNull(HybridLocationInput)
+                //     },
+                // },
+                resolve: (root, {sw, ne}) => {
+                    return getTravelPlan();
+                }
             }
-        }
+
+        },
+
+
+
     })
 });
