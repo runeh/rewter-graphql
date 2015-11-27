@@ -71,10 +71,9 @@ const HybridLocationInput = new GraphQLInputObjectType({
     }
 });
 
-
-const TransitType = new GraphQLEnumType({
-    name: 'TransitType',
-    description: 'One of the types of transit operated by ruter',
+const TransportationType = new GraphQLEnumType({
+    name: 'TransportationType',
+    description: 'A mode of transport, or walking',
     values: {
         WALKING: {
             value: 0,
@@ -112,7 +111,7 @@ const TransitType = new GraphQLEnumType({
             value: 8,
             description: 'Metro'
         },
-    }
+     }
 });
 
 const PlaceType = new GraphQLEnumType({
@@ -142,7 +141,7 @@ const PlaceInterface = new GraphQLInterfaceType({
     name: 'PlaceInterface',
     description: 'A place of some kind',
     fields: {
-        id: {
+       id: {
             type: new GraphQLNonNull(GraphQLInt),
             description: 'Unique ID for a place'
         },
@@ -161,9 +160,10 @@ const PlaceInterface = new GraphQLInterfaceType({
     }
 });
 
+// fixme: add UTMLocation ?
 const GeoLocation = new GraphQLObjectType({
     name: 'GeoLocation',
-    description: 'geo type',
+    description: 'Lat/Lon location',
     fields: {
         latitude: {
             type: GraphQLFloat,
@@ -178,7 +178,7 @@ const GeoLocation = new GraphQLObjectType({
 
 const Line = new GraphQLObjectType({
     name: 'Line',
-    description: 'A public transit line',
+    description: 'A public transportation line',
     fields: () => ({
         id: {
             type: new GraphQLNonNull(GraphQLInt),
@@ -188,8 +188,8 @@ const Line = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLString),
             description: 'The name of the line.',
         },
-        transitType: {
-            type: new GraphQLNonNull(TransitType),
+        transportationType: {
+            type: new GraphQLNonNull(TransportationType),
             description: 'The type or transport of the line.',
         },
         color: {
@@ -277,20 +277,20 @@ const Stop = new GraphQLObjectType({
             type: new GraphQLList(Line),
             description: 'lines serviced by from stop by type',
             args: {
-                transitType: {
-                    name: 'transitType',
-                    type: new GraphQLList(TransitType)
+                transportationType: {
+                    name: 'transportationType',
+                    type: new GraphQLList(TransportationType)
                 },
                 id: {
                     name: 'id',
                     type: new GraphQLList(GraphQLInt),
                 }
             },
-            resolve: ({id: stopId}, {transitType, id: lineId}) => {
+            resolve: ({id: stopId}, {transportationType, id: lineId}) => {
                 let p = linesForStop(stopId);
 
-                if (transitType) {
-                    p = p.then(e => e.filter(y => transitType.indexOf(y.transitType) != -1));
+                if (transportationType) {
+                    p = p.then(e => e.filter(y => transportationType.indexOf(y.transportationType) != -1));
                 }
 
                 if (lineId) {
@@ -334,8 +334,8 @@ const RealtimeDestination = new GraphQLObjectType({
         destinationName: {
             type: new GraphQLNonNull(GraphQLString)
         },
-        transitType: {
-            type: new GraphQLNonNull(TransitType)
+        transportationType: {
+            type: new GraphQLNonNull(TransportationType)
         },
         visits: {
             type: new GraphQLList(RealtimeVisit)
@@ -354,7 +354,7 @@ function visitsToDestinations(visits) {
     const lineVisits = values(groupBy(grouper, visits));
     const lineInfo = lineVisits
                         .map(head)
-                        .map(pick(['stopId', 'lineId', 'name', 'destinationName', 'lineColour', 'transitType']));
+                        .map(pick(['stopId', 'lineId', 'name', 'destinationName', 'lineColour', 'transportationType']));
     return zip(lineInfo, lineVisits).map(([i, v]) => assoc('visits', v, i));
 }
 
@@ -438,8 +438,8 @@ const RealtimeVisit = new GraphQLObjectType({
         monitored: {
             type: new GraphQLNonNull(GraphQLBoolean)
         },
-        transitType: {
-            type: new GraphQLNonNull(TransitType)
+        transportationType: {
+            type: new GraphQLNonNull(TransportationType)
         },
         deviations: {
             type: new GraphQLList(Deviation)
@@ -529,8 +529,8 @@ const TravelStageInterface = new GraphQLInterfaceType({
         travelTimeMins: {
             type: new GraphQLNonNull(GraphQLInt)
         },
-        transitType: {
-            type: new GraphQLNonNull(TransitType)
+        transportationType: {
+            type: new GraphQLNonNull(TransportationType)
         }
     })
 });
@@ -540,7 +540,7 @@ const WalkingTravelStage = new GraphQLObjectType({
     name: 'WalkingTravelStage',
     description: 'A travel stage that has to be walked',
     interfaces: [ TravelStageInterface ],
-    isTypeOf: e => e.transitType == 0, // fixme, use enum somehow
+    isTypeOf: e => e.transportationType == 0, // fixme, use enum somehow
 
     fields: () => ({
         // from TravelStageInterface:
@@ -553,8 +553,8 @@ const WalkingTravelStage = new GraphQLObjectType({
         travelTimeMins: {
             type: new GraphQLNonNull(GraphQLInt)
         },
-        transitType: {
-            type: new GraphQLNonNull(TransitType)
+        transportationType: {
+            type: new GraphQLNonNull(TransportationType)
         },
         // own:
 
@@ -568,7 +568,7 @@ const TransitTravelStage = new GraphQLObjectType({
     name: 'TransitTravelStage',
     description: 'A stage of a travel proposal',
     interfaces: [ TravelStageInterface ],
-    isTypeOf: e => e.transitType != 0, // fixme, use enum somehow
+    isTypeOf: e => e.transportationType != 0, // fixme, use enum somehow
 
     fields: () => ({
         // from TravelStageInterface:
@@ -581,8 +581,8 @@ const TransitTravelStage = new GraphQLObjectType({
         travelTimeMins: {
             type: new GraphQLNonNull(GraphQLInt)
         },
-        transitType: {
-            type: new GraphQLNonNull(TransitType)
+        transportationType: {
+            type: new GraphQLNonNull(TransportationType)
         },
 
         // own:

@@ -2,7 +2,10 @@ import rp from 'request-promise';
 import {toLatLon} from 'utm';
 import LRU from 'lru-cache';
 
-const cache = LRU();
+const cache = LRU({
+    maxAge: 1000 * 20,
+    max: 200
+});
 const baseUrl = 'https://reisapi.ruter.no';
 
 // mapper between how transport type is represented in
@@ -37,7 +40,7 @@ function parseLineInfo(info) {
     return {
         id: info.ID,
         name: info.Name.trim(),
-        transitType: info.Transportation,
+        transportationType: info.Transportation,
         color: info.LineColour
     };
 }
@@ -67,7 +70,7 @@ function parseVisit(e) {
         platform: e.MonitoredVehicleJourney.MonitoredCall.DeparturePlatformName,
         inCongestion: e.MonitoredVehicleJourney.InCongestion,
         monitored: e.MonitoredVehicleJourney.Monitored,
-        transitType: vehicleModeToTransportType[e.MonitoredVehicleJourney.VehicleMode],
+        transportationType: vehicleModeToTransportType[e.MonitoredVehicleJourney.VehicleMode],
         lowFloor: e.MonitoredVehicleJourney.VehicleFeatureRef 
                     ? e.MonitoredVehicleJourney.VehicleFeatureRef == 'lowFloor'
                     : false
@@ -175,7 +178,7 @@ function parseTravelStage(stage) {
         departureTime: stage.DepartureTime,
         arrivalTime: stage.ArrivalTime,
         travelTimeMins: parseDurationString(stage.TravelTime || stage.WalkingTime),
-        transitType: stage.Transportation
+        transportationType: stage.Transportation
     });
 
 
