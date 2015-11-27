@@ -1,33 +1,33 @@
 import {
-    stopInfo,
+    areaStops,
+    closestStops,
+    getTravelPlan,
     lineInfo,
     linesForStop,
+    placesForName,
+    stopInfo,
     stopsForLine,
     stopVisits,
-    placesForName,
-    closestStops,
-    areaStops,
-    getTravelPlan
 } from './ruter-fetcher';
 
 import {
+    GraphQLBoolean,
     GraphQLEnumType,
-    GraphQLInterfaceType,
+    GraphQLFloat,
     GraphQLInputObjectType,
-    GraphQLObjectType,
+    GraphQLInt,
+    GraphQLInterfaceType,
     GraphQLList,
     GraphQLNonNull,
+    GraphQLObjectType,
     GraphQLSchema,
     GraphQLString,
-    GraphQLInt,
-    GraphQLFloat,
-    GraphQLBoolean,
 } from 'graphql';
 
 import {
     assoc,
-    groupBy,
     flatten,
+    groupBy,
     head,
     map as mapObj,
     map,
@@ -38,37 +38,37 @@ import {
     toPairs,
     uniq,
     values,
-    zip
+    zip,
 } from 'ramda';
 
 import {fromLatLon} from 'utm';
 
 
 const GeoLocationInput = new GraphQLInputObjectType({
-  name: 'GeoLocationInput',
-  fields: {
-    lat: { type: new GraphQLNonNull(GraphQLFloat) },
-    lng: { type: new GraphQLNonNull(GraphQLFloat) },
-  }
+    name: 'GeoLocationInput',
+    fields: {
+        lat: { type: new GraphQLNonNull(GraphQLFloat) },
+        lng: { type: new GraphQLNonNull(GraphQLFloat) },
+    }
 });
 
 const UtmLocationInput = new GraphQLInputObjectType({
-  name: 'UtmLocationInput',
-  fields: {
-    x: { type: new GraphQLNonNull(GraphQLFloat) },
-    y: { type: new GraphQLNonNull(GraphQLFloat) },
-  }
+    name: 'UtmLocationInput',
+    fields: {
+        x: { type: new GraphQLNonNull(GraphQLFloat) },
+        y: { type: new GraphQLNonNull(GraphQLFloat) },
+    }
 });
 
 const HybridLocationInput = new GraphQLInputObjectType({
-  name: 'HybridLocationInput',
-  description: "Either UTM, with .x and .y, or .lat and .lon. Exists because UnionTypes are not InputObjectTypes yet",
-  fields: {
-    lat: { type: GraphQLFloat },
-    lng: { type: GraphQLFloat },
-    x: { type: GraphQLFloat },
-    y: { type: GraphQLFloat }
-  }
+    name: 'HybridLocationInput',
+    description: "Either UTM, with .x and .y, or .lat and .lon. Exists because UnionTypes are not InputObjectTypes yet",
+    fields: {
+        lat: { type: GraphQLFloat },
+        lng: { type: GraphQLFloat },
+        x: { type: GraphQLFloat },
+        y: { type: GraphQLFloat }
+    }
 });
 
 
@@ -112,7 +112,7 @@ const TransitType = new GraphQLEnumType({
             value: 8,
             description: 'Metro'
         },
-     }
+    }
 });
 
 const PlaceType = new GraphQLEnumType({
@@ -142,7 +142,7 @@ const PlaceInterface = new GraphQLInterfaceType({
     name: 'PlaceInterface',
     description: 'A place of some kind',
     fields: {
-       id: {
+        id: {
             type: new GraphQLNonNull(GraphQLInt),
             description: 'Unique ID for a place'
         },
