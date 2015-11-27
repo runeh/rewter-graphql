@@ -636,7 +636,7 @@ export const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
         name: 'Query',
         fields: {
-            version: {
+            serverVersion: {
                 type: GraphQLString,
                 resolve: function() {
                     return '1.0';
