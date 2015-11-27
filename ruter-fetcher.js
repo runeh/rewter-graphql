@@ -78,11 +78,17 @@ function parseVisit(e) {
 }
 
 function parsePlace(e) {
-    return {
-        id: e.ID,
-        name: e.Name,
-        district: e.District,
-        placeType: e.PlaceType
+    // todo: place types: Stop, POI, Area, Street
+    if (e.PlaceType == "Stop") {
+        return parseStopInfo(e);
+    }
+    else {
+        return {
+            id: e.ID,
+            name: e.Name,
+            district: e.District,
+            placeType: e.PlaceType
+        }        
     }
 }
 
