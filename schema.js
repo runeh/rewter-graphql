@@ -160,7 +160,6 @@ const PlaceInterface = new GraphQLInterfaceType({
     }
 });
 
-// fixme: add UTMLocation ?
 const GeoLocation = new GraphQLObjectType({
     name: 'GeoLocation',
     description: 'Lat/Lon location',
@@ -172,6 +171,21 @@ const GeoLocation = new GraphQLObjectType({
         longitude: {
             type: GraphQLFloat,
             description: 'longitude'
+        }
+    }
+});
+
+const UTMLocation = new GraphQLObjectType({
+    name: 'UTMLocation',
+    description: 'Location in UTM 32 format',
+    fields: {
+        x: {
+            type: GraphQLInt,
+            description: 'Northing'
+        },
+        y: {
+            type: GraphQLInt,
+            description: 'Easting'
         }
     }
 });
@@ -261,17 +275,11 @@ const Stop = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLBoolean),
             description: 'desc'
         },
-        utmX: {
-            type: new GraphQLNonNull(GraphQLInt),
-            description: 'desc'
-        },
-        utmY: {
-            type: new GraphQLNonNull(GraphQLInt),
-            description: 'desc'
+        utmLocation: {
+            type: new GraphQLNonNull(UTMLocation)
         },
         geoLocation: {
-            type: GeoLocation,
-            description: 'geo point'
+            type: new GraphQLNonNull(GeoLocation),
         },
         lines: {
             type: new GraphQLList(Line),
