@@ -61,6 +61,22 @@ const UtmLocationInput = new GraphQLInputObjectType({
     }
 });
 
+const StopIdInput = new GraphQLInputObjectType({
+    name: 'StopIdInput',
+    description: "id of a stop",
+    fields: {
+        id: { type: new GraphQLNonNull(GraphQLInt) }
+    }
+});
+
+const AreaIdInput = new GraphQLInputObjectType({
+    name: 'AreaIdInput',
+    description: "id of an area",
+    fields: {
+        id: { type: new GraphQLNonNull(GraphQLInt) }
+    }
+});
+
 const HybridLocationInput = new GraphQLInputObjectType({
     name: 'HybridLocationInput',
     description: "Either UTM, with .x and .y, or .lat and .lon. Exists because UnionTypes are not InputObjectTypes yet",
@@ -71,6 +87,25 @@ const HybridLocationInput = new GraphQLInputObjectType({
         y: { type: GraphQLFloat }
     }
 });
+
+const PlannerLocationInput = new GraphQLInputObjectType({
+    name: "PlannerLocationInput",
+    fields: {
+        geo: {
+            type: GeoLocationInput
+        },
+        utm: {
+            type: UtmLocationInput
+        },
+        stop: {
+            type: StopIdInput
+        },
+        area: {
+            type: AreaIdInput
+        }
+    }
+})
+
 
 const TransportationType = new GraphQLEnumType({
     name: 'TransportationType',
@@ -839,24 +874,20 @@ export const schema = new GraphQLSchema({
 
             travelPlanner: {
                 type: new GraphQLList(TravelProposal),
-                // args: {
-                //     sw: {
-                //         name: "sw",
-                //         type: new GraphQLNonNull(HybridLocationInput)
-                //     },
-                //     ne: {
-                //         name: "ne",
-                //         type: new GraphQLNonNull(HybridLocationInput)
-                //     },
-                // },
-                resolve: (root, {sw, ne}) => {
+                args: {
+                    origin: {
+                        type: new GraphQLNonNull(PlannerLocationInput)
+                    },
+                    destination: {
+                        type: new GraphQLNonNull(PlannerLocationInput)
+                    }
+                },
+                resolve: (root, {origin}) => {
+                    console.log(origin)
                     return getTravelPlan();
                 }
             }
-
         },
-
-
 
     })
 });
