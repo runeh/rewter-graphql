@@ -422,6 +422,8 @@ const House = new GraphQLObjectType({
         utmLocation: {
             type: new GraphQLNonNull(UTMLocation)
         }
+
+        // todo: from house to stops and sales points
     })
 });
 
@@ -597,35 +599,6 @@ const RealtimeVisit = new GraphQLObjectType({
     })
 
 });
-
-
-const Place = new GraphQLObjectType({
-    name: 'Place',
-    description: 'A place of some kind',
-    interfaces: [ PlaceInterface ],
-    isTypeOf: e => e.placeType != "Stop", // fixme, use enum somehow
-
-    fields: () => ({
-        id: {
-            type: new GraphQLNonNull(GraphQLInt),
-            description: 'Unique ID for a place'
-        },
-        name: {
-            type: new GraphQLNonNull(GraphQLString),
-            description: 'Name of place'
-        },
-        district: {
-            type: new GraphQLNonNull(GraphQLString),
-            description: 'District place belongs to'
-        },
-        placeType: {
-            type: new GraphQLNonNull(PlaceType),
-            description: 'Type of place'
-        }
-    })
-});
-
-
 
 
 
