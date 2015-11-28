@@ -46,8 +46,21 @@ function parsePoiInfo(info) {
         nearbyStops: info.Stops
             .filter(e => e.ID !== 0)
             .map(parseStopInfo)
-    }
+    };
 }
+
+function parseAreaInfo(info) {
+    return {
+        id: info.ID,
+        name: info.Name.trim(),
+        geoLocation: toLatLon(info.X, info.Y, 32, null, true), // should be "V"?
+        utmLocation: {x: info.X, y: info.Y},
+        district: info.District,
+        placeType: "Area",
+        stops: info.Stops.map(parseStopInfo)
+    };
+}
+
 
 function parseLineInfo(info) {
     return {
@@ -96,22 +109,31 @@ function parsePlace(e) {
         return parseStopInfo(e);
     }
     else if (e.PlaceType == "POI") {
-        //console.log(parsePoiInfo(e))
         return parsePoiInfo(e);
     }
     else if (e.PlaceType == "Street") {
-        console.log(e)
+        return {
+            id: e.ID,
+            name: e.Name,
+            district: e.District,
+            placeType: e.PlaceType
+        }
     }
-
-    return {
-        id: e.ID,
-        name: e.Name,
-        district: e.District,
-        placeType: e.PlaceType
+    else if (e.PlaceType == "Area") {
+        return parseAreaInfo(e);
+    }
+    else {
+        return {
+            id: e.ID,
+            name: e.Name,
+            district: e.District,
+            placeType: e.PlaceType
+        }        
     }
 }
 
 function getJson(url, query) {
+    // todo: escape URI
     const key = url + ":" + JSON.stringify(query || {});
     const data = cache.get(key);
     if (data) { 
@@ -229,7 +251,6 @@ function parseTransitTravelStage(stage) {
 }
 
 function parseTravelPlan(plan) {
-    // console.log(plan);
     return {
         departureTime: plan.DepartureTime,
         arrivalTime: plan.ArrivalTime,

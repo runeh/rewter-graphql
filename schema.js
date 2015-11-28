@@ -371,6 +371,40 @@ const POI = new GraphQLObjectType({
 });
 
 
+const Area = new GraphQLObjectType({
+    name: 'Area',
+    description: 'An area',
+    interfaces: [ PlaceInterface ],
+    isTypeOf: e => e.placeType == "Area", // fixme, use enum somehow
+    fields: () => ({
+        // fields for PlaceInterface
+        id: {
+            type: new GraphQLNonNull(GraphQLInt),
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+        placeType: {
+            type: new GraphQLNonNull(PlaceType),
+        },
+        district: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+
+        // own fields
+        geoLocation: {
+            type: new GraphQLNonNull(GeoLocation)
+        },
+        utmLocation: {
+            type: new GraphQLNonNull(UTMLocation)
+        },
+        stops: {
+            type: new GraphQLList(Stop)
+        }
+    })
+});
+
+
 
 const House = new GraphQLObjectType({
     name: 'House',
