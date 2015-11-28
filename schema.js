@@ -23,7 +23,9 @@ import {
     GraphQLObjectType,
     GraphQLSchema,
     GraphQLString,
+    GraphQLUnionType,
 } from 'graphql';
+
 
 import {
     assoc,
@@ -47,6 +49,7 @@ import {fromLatLon} from 'utm';
 
 const GeoLocationInput = new GraphQLInputObjectType({
     name: 'GeoLocationInput',
+    description: 'A location in lat/lon format',
     fields: {
         lat: { type: new GraphQLNonNull(GraphQLFloat) },
         lng: { type: new GraphQLNonNull(GraphQLFloat) },
@@ -55,9 +58,19 @@ const GeoLocationInput = new GraphQLInputObjectType({
 
 const UtmLocationInput = new GraphQLInputObjectType({
     name: 'UtmLocationInput',
+    description: 'A location in UTM32 format',
     fields: {
         x: { type: new GraphQLNonNull(GraphQLFloat) },
         y: { type: new GraphQLNonNull(GraphQLFloat) },
+    }
+});
+
+const LocationInput = new GraphQLInputObjectType({
+    name: 'LocationInput',
+    description: 'A location in either lat/lon or UTM32 format. Note no safety that either is present!',
+    fields: {
+        geoLocation: { type: GeoLocationInput },
+        utmLocation: { type: UtmLocationInput },
     }
 });
 
@@ -74,17 +87,6 @@ const AreaIdInput = new GraphQLInputObjectType({
     description: "id of an area",
     fields: {
         id: { type: new GraphQLNonNull(GraphQLInt) }
-    }
-});
-
-const HybridLocationInput = new GraphQLInputObjectType({
-    name: 'HybridLocationInput',
-    description: "Either UTM, with .x and .y, or .lat and .lon. Exists because UnionTypes are not InputObjectTypes yet",
-    fields: {
-        lat: { type: GraphQLFloat },
-        lng: { type: GraphQLFloat },
-        x: { type: GraphQLFloat },
-        y: { type: GraphQLFloat }
     }
 });
 
@@ -105,6 +107,8 @@ const PlannerLocationInput = new GraphQLInputObjectType({
         }
     }
 })
+
+
 
 
 const TransportationType = new GraphQLEnumType({
@@ -763,22 +767,24 @@ const TransitTravelStage = new GraphQLObjectType({
 });
 
 
-
-
-
-
-function ensureUtmInHybridPosition(pos) {
-    if (pos.x && pos.y) {
-        return pos
+/*
+ * Checks that loc contains either a utm location or a lat/lon location.
+ * If that is not the case, it throws an error.
+ * This is neccessary because union types are not valid as input types
+ * in graphql currently, and we can't have both the utm and latlon 
+ * members of the input object be non-nullable, without requiring both
+ * of them to be present.
+ */
+function geoLocationInputToUtm(loc) {
+    if (loc.utmLocation) {
+        return { easting: loc.utmLocation.x, northing: loc.utmLocation.y };
     }
-    else if (pos.lat && pos.lng) {
-        const {easting, northing} = fromLatLon(pos.lat, pos.lng)
-        pos.x = parseInt(easting);
-        pos.y = parseInt(northing);
-        return pos
+    else if (loc.geoLocation) {
+        const {easting, northing} = fromLatLon(loc.geoLocation.lat, loc.geoLocation.lng)
+        return {easting: parseInt(easting), northing: parseInt(northing)}
     }
     else {
-        throw new Error("bad invariant. Need either x and y or lat and lng on a HybridPosition")
+        throw new Error("GeoLocationInput must have either utmLocation or geoLocation property" );
     }
 }
 
@@ -839,7 +845,7 @@ export const schema = new GraphQLSchema({
                 args: {
                     location: {
                         name: "location",
-                        type: new GraphQLNonNull(HybridLocationInput)
+                        type: new GraphQLNonNull(LocationInput)
                     },
                     maxDistance: {
                         names: "maxDistance",
@@ -848,8 +854,8 @@ export const schema = new GraphQLSchema({
                     // proposals as well?
                 },
                 resolve: (root, {location}) => {
-                    ensureUtmInHybridPosition(location);
-                    return closestStops(location.x, location.y)
+                    const {easting, northing} = geoLocationInputToUtm(location);
+                    return closestStops(easting, northing);
                 }
             },
 
@@ -858,17 +864,19 @@ export const schema = new GraphQLSchema({
                 args: {
                     sw: {
                         name: "sw",
-                        type: new GraphQLNonNull(HybridLocationInput)
+                        type: new GraphQLNonNull(LocationInput)
                     },
                     ne: {
                         name: "ne",
-                        type: new GraphQLNonNull(HybridLocationInput)
+                        type: new GraphQLNonNull(LocationInput)
                     },
                 },
                 resolve: (root, {sw, ne}) => {
-                    ensureUtmInHybridPosition(sw);
-                    ensureUtmInHybridPosition(ne);
-                    return areaStops(sw, ne)
+                    sw = geoLocationInputToUtm(sw);
+                    ne = geoLocationInputToUtm(ne);
+                    return areaStops(
+                        {x: sw.easting, y: sw.northing},
+                        {x: ne.easting, y: ne.northing});
                 }
             },
 
@@ -882,7 +890,7 @@ export const schema = new GraphQLSchema({
                         type: new GraphQLNonNull(PlannerLocationInput)
                     }
                 },
-                resolve: (root, {origin}) => {
+                resolve: (root, {origin, destination}) => {
                     console.log(origin)
                     return getTravelPlan();
                 }
