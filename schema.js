@@ -5,6 +5,7 @@ import {
     lineInfo,
     linesForStop,
     placesForName,
+    streetHouses,
     stopInfo,
     stopsForLine,
     stopVisits,
@@ -367,8 +368,56 @@ const POI = new GraphQLObjectType({
             resolve: ({nearbyStops}) => nearbyStops.map(e => ({walkingTimeMins: e.walkingTimeMins, stop: e}))
         }
     })
-})
+});
 
+
+
+const House = new GraphQLObjectType({
+    name: 'House',
+    description: 'A house',
+    fields: () => ({
+        streetName: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString)
+        },
+        geoLocation: {
+            type: new GraphQLNonNull(GeoLocation)
+        },
+        utmLocation: {
+            type: new GraphQLNonNull(UTMLocation)
+        }
+    })
+});
+
+const Street = new GraphQLObjectType({
+    name: 'Street',
+    description: 'A Street',
+    interfaces: [ PlaceInterface ],
+    isTypeOf: e => e.placeType == "Street", // fixme, use enum somehow
+    fields: () => ({
+        // fields for PlaceInterface
+        id: {
+            type: new GraphQLNonNull(GraphQLInt),
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+        placeType: {
+            type: new GraphQLNonNull(PlaceType),
+        },
+        district: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+
+        // own fields
+        houses: {
+            type: new GraphQLList(House),
+            resolve: ({id}) => streetHouses(id)
+        }
+    })
+});
 
 
 const RealtimeDestination = new GraphQLObjectType({

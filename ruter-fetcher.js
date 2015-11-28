@@ -99,6 +99,9 @@ function parsePlace(e) {
         //console.log(parsePoiInfo(e))
         return parsePoiInfo(e);
     }
+    else if (e.PlaceType == "Street") {
+        console.log(e)
+    }
 
     return {
         id: e.ID,
@@ -248,4 +251,20 @@ export function getTravelPlan(origin, destination) {
         time: 26113015153000
     };
     return getJson(url, query).then(parseTravelPlans);
+}
+
+function parseStreetHouses(houses) {
+    return houses.Houses.map(e => ({
+                streetName: houses.Name,
+                streetId: houses.ID,
+                district: houses.District,
+                name: e.Name,
+                geoLocation: toLatLon(e.X, e.Y, 32, null, true), // should be "V"?
+                utmLocation: {x: e.X, y: e.Y},
+            }))
+}
+
+export function streetHouses(id) {
+    const url = `${baseUrl}/Street/GetStreet/${id}`;
+    return getJson(url).then(parseStreetHouses);
 }
