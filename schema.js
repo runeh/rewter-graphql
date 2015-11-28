@@ -320,6 +320,57 @@ const Stop = new GraphQLObjectType({
 });
 
 
+const NearbyStop = new GraphQLObjectType({
+    name: 'NearbyStop',
+    description: 'A record of a stop within walking distance of a POI or address',
+    fields: () => ({
+        // fields for PlaceInterface
+        walkingTimeMins: {
+            type: new GraphQLNonNull(GraphQLInt),
+        },
+        stop: {
+            type: new GraphQLNonNull(Stop),
+        }
+    })
+})
+
+
+const POI = new GraphQLObjectType({
+    name: 'POI',
+    description: 'A place of interest',
+    interfaces: [ PlaceInterface ],
+    isTypeOf: e => e.placeType == "POI", // fixme, use enum somehow
+    fields: () => ({
+        // fields for PlaceInterface
+        id: {
+            type: new GraphQLNonNull(GraphQLInt),
+        },
+        name: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+        placeType: {
+            type: new GraphQLNonNull(PlaceType),
+        },
+        district: {
+            type: new GraphQLNonNull(GraphQLString),
+        },
+
+        // own fields
+        geoLocation: {
+            type: new GraphQLNonNull(GeoLocation)
+        },
+        utmLocation: {
+            type: new GraphQLNonNull(UTMLocation)
+        },
+        nearbyStops: {
+            type: new GraphQLList(NearbyStop),
+            resolve: ({nearbyStops}) => nearbyStops.map(e => ({walkingTimeMins: e.walkingTimeMins, stop: e}))
+        }
+    })
+})
+
+
+
 const RealtimeDestination = new GraphQLObjectType({
     name: 'RealtimeDestination',
     description: 'A line, as represented by the realtime system',

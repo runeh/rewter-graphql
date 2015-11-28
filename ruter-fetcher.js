@@ -26,14 +26,27 @@ function parseStopInfo(info) {
         name: info.Name.trim(),
         shortName: info.ShortName,
         zone: info.Zone,
-        utmX: info.X,
-        utmY: info.Y,
         geoLocation: toLatLon(info.X, info.Y, 32, null, true), // should be "V"?
         utmLocation: {x: info.X, y: info.Y},
         isHub: info.IsHub,
         district: info.District,
-        placeType: info.PlaceType || "Stop"
+        placeType: info.PlaceType || "Stop",
+        walkingTimeMins: info.WalkingMinutes || null
     };
+}
+
+function parsePoiInfo(info) {
+    return {
+        id: info.ID,
+        name: info.Name.trim(),
+        geoLocation: toLatLon(info.X, info.Y, 32, null, true), // should be "V"?
+        utmLocation: {x: info.X, y: info.Y},
+        district: info.District,
+        placeType: "POI",
+        nearbyStops: info.Stops
+            .filter(e => e.ID !== 0)
+            .map(parseStopInfo)
+    }
 }
 
 function parseLineInfo(info) {
@@ -82,13 +95,16 @@ function parsePlace(e) {
     if (e.PlaceType == "Stop") {
         return parseStopInfo(e);
     }
-    else {
-        return {
-            id: e.ID,
-            name: e.Name,
-            district: e.District,
-            placeType: e.PlaceType
-        }        
+    else if (e.PlaceType == "POI") {
+        //console.log(parsePoiInfo(e))
+        return parsePoiInfo(e);
+    }
+
+    return {
+        id: e.ID,
+        name: e.Name,
+        district: e.District,
+        placeType: e.PlaceType
     }
 }
 
