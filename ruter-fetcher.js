@@ -1,3 +1,4 @@
+import {format as urlFormat, parse as urlParse} from 'url';
 import rp from 'request-promise';
 import {toLatLon} from 'utm';
 import LRU from 'lru-cache';
@@ -104,7 +105,6 @@ function parseVisit(e) {
 }
 
 function parsePlace(e) {
-    // todo: place types: Stop, POI, Area, Street
     if (e.PlaceType == "Stop") {
         return parseStopInfo(e);
     }
@@ -132,8 +132,12 @@ function parsePlace(e) {
     }
 }
 
+function sanitizeUrl(url) {
+    return urlFormat(urlParse(url));
+}
+
 function getJson(url, query = null) {
-    // todo: escape URI
+    url = sanitizeUrl(url);
     const key = url + ":" + JSON.stringify(query || {});
     const data = cache.get(key);
     if (data) { 
