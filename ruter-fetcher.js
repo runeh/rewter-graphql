@@ -41,6 +41,7 @@ function parseStopInfo(info) {
 }
 
 function parsePoiInfo(info) {
+    console.log(info.Stops)
     return {
         id: info.ID,
         name: info.Name.trim(),

@@ -372,8 +372,6 @@ const NearbyStop = new GraphQLObjectType({
         stop: {
             type: new GraphQLNonNull(Stop),
         }
-
-        // todo fields for location
     })
 });
 
@@ -433,7 +431,6 @@ const Area = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLString),
         },
 
-        // todo: fix geolocation on area, it's null, but can be resolved to center point thingy
         // own fields
         geoLocation: {
             type: new GraphQLNonNull(GeoLocation)
