@@ -53,8 +53,8 @@ function parseAreaInfo(info) {
     return {
         id: info.ID,
         name: info.Name.trim(),
-        geoLocation: toLatLon(info.X, info.Y, 32, null, true), // should be "V"?
-        utmLocation: {x: info.X, y: info.Y},
+        geoLocation: toLatLon(info.Center.X, info.Center.Y, 32, null, true), // should be "V"?
+        utmLocation: {x: info.Center.X, y: info.Center.Y},
         district: info.District,
         placeType: "Area",
         stops: info.Stops.map(parseStopInfo)
