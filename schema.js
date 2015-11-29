@@ -21,24 +21,6 @@ import {
     GraphQLUnionType,
 } from 'graphql';
 
-
-import {
-    assoc,
-    flatten,
-    groupBy,
-    head,
-    map as mapObj,
-    map,
-    pick,
-    pipe,
-    pluck,
-    prop,
-    toPairs,
-    uniq,
-    values,
-    zip,
-} from 'ramda';
-
 import {fromLatLon} from 'utm';
 
 import {
