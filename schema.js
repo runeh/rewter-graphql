@@ -46,6 +46,7 @@ import {
 
 import {fromLatLon} from 'utm';
 
+// todo: us ID type for IDs I guess?
 
 const GeoLocationInput = new GraphQLInputObjectType({
     name: 'GeoLocationInput',
@@ -371,6 +372,8 @@ const NearbyStop = new GraphQLObjectType({
         stop: {
             type: new GraphQLNonNull(Stop),
         }
+
+        // todo fields for location
     })
 })
 
@@ -430,6 +433,7 @@ const Area = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLString),
         },
 
+        // todo: fix geolocation on area, it's null, but can be resolved to center point thingy
         // own fields
         geoLocation: {
             type: new GraphQLNonNull(GeoLocation)
@@ -665,6 +669,8 @@ const TravelProposal = new GraphQLObjectType({
             type: new GraphQLList((TravelStageInterface))
             //type: new GraphQLList(new GraphQLNonNull(TravelStageInterface))
         }
+
+        // todo totaltime
     })
 });
 
@@ -781,10 +787,35 @@ function geoLocationInputToUtm(loc) {
     }
     else if (loc.geoLocation) {
         const {easting, northing} = fromLatLon(loc.geoLocation.lat, loc.geoLocation.lng)
-        return {easting: parseInt(easting), northing: parseInt(northing)}
+        return {easting: parseInt(easting), northing: parseInt(northing)};
     }
     else {
-        throw new Error("GeoLocationInput must have either utmLocation or geoLocation property" );
+        throw new Error("GeoLocationInput must have either utmLocation or geoLocation property");
+    }
+}
+
+/*
+ * todo: wrap utm method to parseint and add correct datum
+ *
+ * todo: add a validation step that can live with schema and run
+ * with resolveWithPrecondition(fun, 'actualResolver') or similar
+ */
+function plannerLocationInputToObject(ploc) {
+    if (ploc.geo) {
+        const {easting, northing} = fromLatLon(ploc.geo.lat, ploc.geo.lng);
+        return {x: parseInt(easting), y: parseInt(northing)};
+    }
+    else if (ploc.utm) {
+        return {x: ploc.utm.x, y: ploc.utm.y};
+    }
+    else if (ploc.stop) {
+        return {id: ploc.stop.id};
+    }
+    else if (ploc.area) {
+        return {id: ploc.area.id};
+    }
+    else {
+        throw new Error("PlannerLocationInput must have one of utm, geo, stop or area set");
     }
 }
 
@@ -891,8 +922,9 @@ export const schema = new GraphQLSchema({
                     }
                 },
                 resolve: (root, {origin, destination}) => {
-                    console.log(origin)
-                    return getTravelPlan();
+                    origin = plannerLocationInputToObject(origin);
+                    destination = plannerLocationInputToObject(destination);
+                    return getTravelPlan(origin, destination);
                 }
             }
         },

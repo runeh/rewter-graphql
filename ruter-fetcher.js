@@ -261,15 +261,21 @@ function parseTravelPlan(plan) {
     }
 }
 
+function locInputToQuery(loc) {
+    return loc.id ? loc.id : `(X=${loc.x},Y=${loc.y})`
+}
+
 export function getTravelPlan(origin, destination) {
-    console.log("fetching travel plan for");
+    console.log("fetching travel plan for", origin, destination);
+    const fromplace = locInputToQuery(origin);
+    const toplace = locInputToQuery(destination);
 
     const url = `${baseUrl}/Travel/GetTravels`;
     const query = {
-        toplace: 3012510,
-        fromplace: 3010625,
+        toplace: toplace,
+        fromplace: fromplace,
         isafter: true,
-        time: 26113015153000
+        time: 28112015173000
     };
     return getJson(url, query).then(parseTravelPlans);
 }
