@@ -2,13 +2,7 @@ import {
     areaStops,
     closestStops,
     getTravelPlan,
-    lineInfo,
-    linesForStop,
-    placesForName,
-    streetHouses,
-    stopInfo,
-    stopsForLine,
-    stopVisits,
+    placesForName
 } from './ruter-fetcher';
 
 import {
@@ -47,6 +41,18 @@ import {
 
 import {fromLatLon} from 'utm';
 
+import {
+    resolveStopInfo,
+    resolveLineInfo,
+    resolveStopsForLine,
+    resolveLinesForStop,
+    resolveStopVisits,
+    resolveUniqueDeviations,
+    resolveStreetHouses,
+    resolveVisitsToDestinations,
+    resolvePlatformsFromVisits
+} from './resolvers'
+
 // todo: use custom scalars for color and transporttime, maybe date?
 // new type for geolocations?
 
@@ -59,6 +65,7 @@ const GeoLocationInput = new GraphQLInputObjectType({
     }
 });
 
+
 const UtmLocationInput = new GraphQLInputObjectType({
     name: 'UtmLocationInput',
     description: 'A location in UTM32 format',
@@ -67,6 +74,7 @@ const UtmLocationInput = new GraphQLInputObjectType({
         y: { type: new GraphQLNonNull(GraphQLFloat) },
     }
 });
+
 
 const LocationInput = new GraphQLInputObjectType({
     name: 'LocationInput',
@@ -77,6 +85,7 @@ const LocationInput = new GraphQLInputObjectType({
     }
 });
 
+
 const StopIdInput = new GraphQLInputObjectType({
     name: 'StopIdInput',
     description: "id of a stop",
@@ -85,6 +94,7 @@ const StopIdInput = new GraphQLInputObjectType({
     }
 });
 
+
 const AreaIdInput = new GraphQLInputObjectType({
     name: 'AreaIdInput',
     description: "id of an area",
@@ -92,6 +102,7 @@ const AreaIdInput = new GraphQLInputObjectType({
         id: { type: GraphQLID }
     }
 });
+
 
 const PlannerLocationInput = new GraphQLInputObjectType({
     name: "PlannerLocationInput",
@@ -155,6 +166,7 @@ const TransportationType = new GraphQLEnumType({
      }
 });
 
+
 const PlaceType = new GraphQLEnumType({
     name: 'PlaceType',
     description: 'A kind of place',
@@ -177,6 +189,7 @@ const PlaceType = new GraphQLEnumType({
         }
     }
 });
+
 
 const PlaceInterface = new GraphQLInterfaceType({
     name: 'PlaceInterface',
@@ -201,6 +214,7 @@ const PlaceInterface = new GraphQLInterfaceType({
     }
 });
 
+
 const GeoLocation = new GraphQLObjectType({
     name: 'GeoLocation',
     description: 'Lat/Lon location',
@@ -216,6 +230,7 @@ const GeoLocation = new GraphQLObjectType({
     }
 });
 
+
 const UTMLocation = new GraphQLObjectType({
     name: 'UTMLocation',
     description: 'Location in UTM 32 format',
@@ -230,6 +245,7 @@ const UTMLocation = new GraphQLObjectType({
         }
     }
 });
+
 
 const Line = new GraphQLObjectType({
     name: 'Line',
@@ -254,19 +270,12 @@ const Line = new GraphQLObjectType({
         stops: {
             type: new GraphQLList(new GraphQLNonNull(Stop)),
             description: 'Stops serviced by this line',
-            resolve: ({id}, args, source) => stopsForLine(id)
-        },
-        endPoints: {
-            type: GraphQLString,
-            description: 'End points for line',
-            resolve: ({id}) => stopsForLine(id).then(e => {
-                return e[0].name + ' / ' + e[e.length - 1].name;
-            })
-
+            resolve: ({id}, args, source) => resolveStopsForLine(id)
         }
     }),
     interfaces: [ ]
 });
+
 
 const Deviation = new GraphQLObjectType({
     name: 'Deviation',
@@ -281,6 +290,7 @@ const Deviation = new GraphQLObjectType({
         }
     }
 });
+
 
 const Stop = new GraphQLObjectType({
     name: 'Stop',
@@ -336,7 +346,7 @@ const Stop = new GraphQLObjectType({
                 }
             },
             resolve: ({id: stopId}, {transportationType, id: lineId}) => {
-                let p = linesForStop(stopId);
+                let p = resolveLinesForStop(stopId);
 
                 if (transportationType) {
                     p = p.then(e => e.filter(y => transportationType.indexOf(y.transportationType) != -1));
@@ -355,7 +365,7 @@ const Stop = new GraphQLObjectType({
 
         realtime: {
             type: Realtime,
-            resolve: ({id}) => stopVisits(id)
+            resolve: ({id}) => resolveStopVisits(id)
         }
     })
 });
@@ -445,7 +455,6 @@ const Area = new GraphQLObjectType({
 });
 
 
-
 const House = new GraphQLObjectType({
     name: 'House',
     description: 'A house',
@@ -466,6 +475,7 @@ const House = new GraphQLObjectType({
         // todo: from house to stops and sales points
     })
 });
+
 
 const Street = new GraphQLObjectType({
     name: 'Street',
@@ -490,7 +500,7 @@ const Street = new GraphQLObjectType({
         // own fields
         houses: {
             type: new GraphQLList(House),
-            resolve: ({id}) => streetHouses(id)
+            resolve: ({id}) => resolveStreetHouses(id)
         }
     })
 });
@@ -505,11 +515,11 @@ const RealtimeDestination = new GraphQLObjectType({
         },
         stop: {
             type: new GraphQLNonNull(Stop),
-            resolve: ({stopId}) => stopInfo(stopId)
+            resolve: ({stopId}) => resolveStopInfo(stopId)
         },
         line: {
             type: new GraphQLNonNull(Line),
-            resolve: ({lineId}) => lineInfo(lineId)
+            resolve: ({lineId}) => resolveLineInfo(lineId)
         },
         color: {
             type: new GraphQLNonNull(GraphQLString),
@@ -526,21 +536,11 @@ const RealtimeDestination = new GraphQLObjectType({
         },
         deviations: {
             type: new GraphQLList(Deviation),
-            resolve: ({visits}) => collectUniqueDeviations(visits)
+            resolve: ({visits}) => resolveUniqueDeviations(visits)
         }
     })
 });
 
-const collectUniqueDeviations = pipe(pluck('deviations'), flatten, uniq);
-
-function visitsToDestinations(visits) {
-    const grouper = e => `${e.lineId}:${e.destinationName}`;
-    const lineVisits = values(groupBy(grouper, visits));
-    const lineInfo = lineVisits
-                        .map(head)
-                        .map(pick(['stopId', 'lineId', 'name', 'destinationName', 'lineColour', 'transportationType']));
-    return zip(lineInfo, lineVisits).map(([i, v]) => assoc('visits', v, i));
-}
 
 const RealtimePlatform = new GraphQLObjectType({
     name: 'RealtimePlatform',
@@ -554,21 +554,15 @@ const RealtimePlatform = new GraphQLObjectType({
         },
         destinations: {
             type: new GraphQLList(RealtimeDestination),
-            resolve: ({visits}) => visitsToDestinations(visits)
+            resolve: ({visits}) => resolveVisitsToDestinations(visits)
         },
         deviations: {
             type: new GraphQLList(Deviation),
-            resolve: ({visits}) => collectUniqueDeviations(visits)
+            resolve: ({visits}) => resolveUniqueDeviations(visits)
         }
     })
 });
 
-function platformsFromVisits(visits) {
-    visits = visits.filter(prop('platform'));
-    const platformVisits = groupBy(prop('platform'), visits);
-    return toPairs(platformVisits)
-            .map(([name, visits]) => ({name, visits}));
-}
 
 const Realtime = new GraphQLObjectType({
     name: 'Realtime',
@@ -580,15 +574,15 @@ const Realtime = new GraphQLObjectType({
         },
         platforms: {
             type: new GraphQLList(RealtimePlatform),
-            resolve: (visits) => platformsFromVisits(visits)
+            resolve: (visits) => resolvePlatformsFromVisits(visits)
         },
         destinations: {
             type: new GraphQLList(RealtimeDestination),
-            resolve: (visits) => visitsToDestinations(visits)
+            resolve: (visits) => resolveVisitsToDestinations(visits)
         },
         deviations: {
             type: new GraphQLList(Deviation),
-            resolve: (visits) => collectUniqueDeviations(visits)
+            resolve: (visits) => resolveUniqueDeviations(visits)
         }
     })
 });
@@ -630,16 +624,14 @@ const RealtimeVisit = new GraphQLObjectType({
         },
         stop: {
             type: new GraphQLNonNull(Stop),
-            resolve: ({stopId}) => stopInfo(stopId)
+            resolve: ({stopId}) => resolveStopInfo(stopId)
         },
         line: {
             type: new GraphQLNonNull(Line),
-            resolve: ({lineId}) => lineInfo(lineId)
+            resolve: ({lineId}) => resolveLineInfo(lineId)
         }
     })
-
 });
-
 
 
 const TravelProposal = new GraphQLObjectType({
@@ -712,7 +704,6 @@ const WalkingTravelStage = new GraphQLObjectType({
         },
 
         // own:
-
         arrivalGeoLocation: {
             type: new GraphQLNonNull(GeoLocation)
         },
@@ -755,9 +746,6 @@ const TransitTravelStage = new GraphQLObjectType({
         },
 
         // own:
-        // line: {
-        //     type: new GraphQLNonNull(Line)
-        // },
         destinationName: {
             type: new GraphQLNonNull(GraphQLString)
         },
@@ -775,7 +763,7 @@ const TransitTravelStage = new GraphQLObjectType({
         },
         line: {
             type: new GraphQLNonNull(Line),
-            resolve: ({line}) => lineInfo(line)
+            resolve: ({line}) => resolveLineInfo(line)
         }
     })
 });
@@ -827,6 +815,7 @@ function plannerLocationInputToObject(ploc) {
     }
 }
 
+
 export const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
         name: 'Query',
@@ -848,14 +837,14 @@ export const schema = new GraphQLSchema({
                 args: {
                     id: { name: 'id', type: GraphQLID }
                 },
-                resolve: (root, {id}, source) => stopInfo(id)
+                resolve: (_, {id}, __) => resolveStopInfo(id)
             },
             line: {
                 type: Line,
                 args: {
                     id: { name: 'id', type: GraphQLID }
                 },
-                resolve: (root, {id}, source) => lineInfo(id)
+                resolve: (root, {id}, source) => resolveLineInfo(id)
             },
             places: {
                 type: new GraphQLList(PlaceInterface),
