@@ -668,8 +668,6 @@ const TravelProposal = new GraphQLObjectType({
         stages: {
             type: new GraphQLList(TravelStageInterface)
         }
-
-        // todo totaltime
     })
 });
 
