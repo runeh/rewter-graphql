@@ -1,6 +1,4 @@
 import {
-    areaStops,
-    closestStops,
     getTravelPlan,
     placesForName
 } from './ruter-fetcher';
@@ -32,7 +30,9 @@ import {
     resolveUniqueDeviations,
     resolveStreetHouses,
     resolveVisitsToDestinations,
-    resolvePlatformsFromVisits
+    resolvePlatformsFromVisits,
+    resolveClosestStops,
+    resolveAreaStops
 } from './resolvers'
 
 // todo: use custom scalars for color and transporttime, maybe date?
@@ -751,26 +751,7 @@ const TransitTravelStage = new GraphQLObjectType({
 });
 
 
-/*
- * Checks that loc contains either a utm location or a lat/lon location.
- * If that is not the case, it throws an error.
- * This is neccessary because union types are not valid as input types
- * in graphql currently, and we can't have both the utm and latlon 
- * members of the input object be non-nullable, without requiring both
- * of them to be present.
- */
-function geoLocationInputToUtm(loc) {
-    if (loc.utmLocation) {
-        return { easting: loc.utmLocation.x, northing: loc.utmLocation.y };
-    }
-    else if (loc.geoLocation) {
-        const {easting, northing} = fromLatLon(loc.geoLocation.lat, loc.geoLocation.lng)
-        return {easting: parseInt(easting), northing: parseInt(northing)};
-    }
-    else {
-        throw new Error("GeoLocationInput must have either utmLocation or geoLocation property");
-    }
-}
+
 
 /*
  * todo: wrap utm method to parseint and add correct datum
@@ -863,10 +844,7 @@ export const schema = new GraphQLSchema({
                     }
                     // proposals as well?
                 },
-                resolve: (root, {location}) => {
-                    const {easting, northing} = geoLocationInputToUtm(location);
-                    return closestStops(easting, northing);
-                }
+                resolve: (root, {location}) => resolveClosestStops(location) // fixme: add a validation function here?
             },
 
             areaStops: {
@@ -881,13 +859,7 @@ export const schema = new GraphQLSchema({
                         type: new GraphQLNonNull(LocationInput)
                     },
                 },
-                resolve: (root, {sw, ne}) => {
-                    sw = geoLocationInputToUtm(sw);
-                    ne = geoLocationInputToUtm(ne);
-                    return areaStops(
-                        {x: sw.easting, y: sw.northing},
-                        {x: ne.easting, y: ne.northing});
-                }
+                resolve: (root, {sw, ne}) => resolveAreaStops(sw, ne)
             },
 
             travelPlanner: {
