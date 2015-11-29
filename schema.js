@@ -15,6 +15,7 @@ import {
     GraphQLBoolean,
     GraphQLEnumType,
     GraphQLFloat,
+    GraphQLID,
     GraphQLInputObjectType,
     GraphQLInt,
     GraphQLInterfaceType,
@@ -46,7 +47,7 @@ import {
 
 import {fromLatLon} from 'utm';
 
-// todo: us ID type for IDs I guess?
+// todo: use custom scalars for color and transporttime, maybe date?
 
 const GeoLocationInput = new GraphQLInputObjectType({
     name: 'GeoLocationInput',
@@ -79,7 +80,7 @@ const StopIdInput = new GraphQLInputObjectType({
     name: 'StopIdInput',
     description: "id of a stop",
     fields: {
-        id: { type: new GraphQLNonNull(GraphQLInt) }
+        id: { type: GraphQLID }
     }
 });
 
@@ -87,7 +88,7 @@ const AreaIdInput = new GraphQLInputObjectType({
     name: 'AreaIdInput',
     description: "id of an area",
     fields: {
-        id: { type: new GraphQLNonNull(GraphQLInt) }
+        id: { type: GraphQLID }
     }
 });
 
@@ -181,7 +182,7 @@ const PlaceInterface = new GraphQLInterfaceType({
     description: 'A place of some kind',
     fields: {
        id: {
-            type: new GraphQLNonNull(GraphQLInt),
+            type: GraphQLID,
             description: 'Unique ID for a place'
         },
         name: {
@@ -234,7 +235,7 @@ const Line = new GraphQLObjectType({
     description: 'A public transportation line',
     fields: () => ({
         id: {
-            type: new GraphQLNonNull(GraphQLInt),
+            type: GraphQLID,
             description: 'The id of the line.',
         },
         name: {
@@ -271,7 +272,7 @@ const Deviation = new GraphQLObjectType({
     description: 'Notice about a deviation from regular service',
     fields: {
         id: {
-            type: new GraphQLNonNull(GraphQLInt),
+            type: GraphQLID,
         },
         header: {
             type: new GraphQLNonNull(GraphQLString),
@@ -289,7 +290,7 @@ const Stop = new GraphQLObjectType({
 
         // fields for PlaceInterface
         id: {
-            type: new GraphQLNonNull(GraphQLInt),
+            type: GraphQLID,
         },
         name: {
             type: new GraphQLNonNull(GraphQLString),
@@ -330,7 +331,7 @@ const Stop = new GraphQLObjectType({
                 },
                 id: {
                     name: 'id',
-                    type: new GraphQLList(GraphQLInt),
+                    type: GraphQLID,
                 }
             },
             resolve: ({id: stopId}, {transportationType, id: lineId}) => {
@@ -343,7 +344,7 @@ const Stop = new GraphQLObjectType({
                 if (lineId) {
                     p = p.then(e => {
                         return e.filter(y => lineId.indexOf(y.id) != -1 );
-                    })
+                    });
                 }
 
                 return p;
@@ -373,7 +374,7 @@ const NearbyStop = new GraphQLObjectType({
 
         // todo fields for location
     })
-})
+});
 
 
 const POI = new GraphQLObjectType({
@@ -384,7 +385,7 @@ const POI = new GraphQLObjectType({
     fields: () => ({
         // fields for PlaceInterface
         id: {
-            type: new GraphQLNonNull(GraphQLInt),
+            type: GraphQLID,
         },
         name: {
             type: new GraphQLNonNull(GraphQLString),
@@ -419,7 +420,7 @@ const Area = new GraphQLObjectType({
     fields: () => ({
         // fields for PlaceInterface
         id: {
-            type: new GraphQLNonNull(GraphQLInt),
+            type: GraphQLID,
         },
         name: {
             type: new GraphQLNonNull(GraphQLString),
@@ -476,7 +477,7 @@ const Street = new GraphQLObjectType({
     fields: () => ({
         // fields for PlaceInterface
         id: {
-            type: new GraphQLNonNull(GraphQLInt),
+            type: GraphQLID,
         },
         name: {
             type: new GraphQLNonNull(GraphQLString),
@@ -833,14 +834,14 @@ export const schema = new GraphQLSchema({
             stop: {
                 type: Stop,
                 args: {
-                    id: { name: 'id', type: new GraphQLNonNull(GraphQLInt) }
+                    id: { name: 'id', type: GraphQLID }
                 },
                 resolve: (root, {id}, source) => stopInfo(id)
             },
             line: {
                 type: Line,
                 args: {
-                    id: { name: 'id', type: new GraphQLNonNull(GraphQLInt) }
+                    id: { name: 'id', type: GraphQLID }
                 },
                 resolve: (root, {id}, source) => lineInfo(id)
             },
