@@ -48,6 +48,7 @@ import {
 import {fromLatLon} from 'utm';
 
 // todo: use custom scalars for color and transporttime, maybe date?
+// new type for geolocations?
 
 const GeoLocationInput = new GraphQLInputObjectType({
     name: 'GeoLocationInput',
@@ -714,9 +715,25 @@ const WalkingTravelStage = new GraphQLObjectType({
         transportationType: {
             type: new GraphQLNonNull(TransportationType)
         },
+
         // own:
 
-        // arrival point and departure point
+        arrivalGeoLocation: {
+            type: new GraphQLNonNull(GeoLocation)
+        },
+
+        arrivalUtmLocation: {
+            type: new GraphQLNonNull(UTMLocation)
+        },
+
+        departureGeoLocation: {
+            type: new GraphQLNonNull(GeoLocation)
+        },
+
+        departureUtmLocation: {
+            type: new GraphQLNonNull(UTMLocation)
+        }
+
     })
 });
 

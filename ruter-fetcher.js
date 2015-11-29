@@ -21,6 +21,10 @@ const vehicleModeToTransportType = {
     4: 8
 };
 
+function utmToGeo(x, y) {
+    return toLatLon(x, y, 32, null, true)    
+}
+
 function parseStopInfo(info) {
     return {
         id: info.ID,
@@ -225,21 +229,20 @@ function parseTravelStage(stage) {
              ? parseWalkingTravelStage(stage)
              : parseTransitTravelStage(stage);
 
-    const x = Object.assign(typedStage, {
+    return Object.assign(typedStage, {
         departureTime: stage.DepartureTime,
         arrivalTime: stage.ArrivalTime,
         travelTimeMins: parseDurationString(stage.TravelTime || stage.WalkingTime),
         transportationType: stage.Transportation
     });
-
-
-    //console.log(x);
-    return x;
 }
 
 function parseWalkingTravelStage(stage) {
     return {
-        pos: "todo"
+        arrivalGeoLocation: utmToGeo(stage.ArrivalPoint.X, stage.ArrivalPoint.Y),
+        arrivalUtmLocation: {x: stage.ArrivalPoint.X, y: stage.ArrivalPoint.Y},
+        departureGeoLocation: utmToGeo(stage.DeparturePoint.X, stage.DeparturePoint.Y),
+        departureUtmLocation: {x: stage.DeparturePoint.X, y: stage.DeparturePoint.Y}
     };
 }
 
