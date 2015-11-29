@@ -31,7 +31,7 @@ function parseStopInfo(info) {
         name: info.Name.trim(),
         shortName: info.ShortName,
         zone: info.Zone,
-        geoLocation: toLatLon(info.X, info.Y, 32, null, true), // should be "V"?
+        geoLocation: utmToGeo(info.X, info.Y),
         utmLocation: {x: info.X, y: info.Y},
         isHub: info.IsHub,
         district: info.District,
@@ -44,7 +44,7 @@ function parsePoiInfo(info) {
     return {
         id: info.ID,
         name: info.Name.trim(),
-        geoLocation: toLatLon(info.X, info.Y, 32, null, true), // should be "V"?
+        geoLocation: utmToGeo(info.X, info.Y),
         utmLocation: {x: info.X, y: info.Y},
         district: info.District,
         placeType: "POI",
@@ -58,7 +58,7 @@ function parseAreaInfo(info) {
     return {
         id: info.ID,
         name: info.Name.trim(),
-        geoLocation: toLatLon(info.Center.X, info.Center.Y, 32, null, true), // should be "V"?
+        geoLocation: utmToGeo(info.Center.X, info.Center.Y),
         utmLocation: {x: info.Center.X, y: info.Center.Y},
         district: info.District,
         placeType: "Area",
@@ -293,7 +293,7 @@ function parseStreetHouses(houses) {
                 streetId: houses.ID,
                 district: houses.District,
                 name: e.Name,
-                geoLocation: toLatLon(e.X, e.Y, 32, null, true), // should be "V"?
+                geoLocation: utmToGeo(e.X, e.Y),
                 utmLocation: {x: e.X, y: e.Y},
             }));
 }
