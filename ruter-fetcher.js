@@ -18,7 +18,7 @@ const vehicleModeToTransportType = {
     2: 6,
     3: 7,
     4: 8
-}
+};
 
 function parseStopInfo(info) {
     return {
@@ -117,7 +117,7 @@ function parsePlace(e) {
             name: e.Name,
             district: e.District,
             placeType: e.PlaceType
-        }
+        };
     }
     else if (e.PlaceType == "Area") {
         return parseAreaInfo(e);
@@ -128,11 +128,11 @@ function parsePlace(e) {
             name: e.Name,
             district: e.District,
             placeType: e.PlaceType
-        }        
+        }; 
     }
 }
 
-function getJson(url, query) {
+function getJson(url, query = null) {
     // todo: escape URI
     const key = url + ":" + JSON.stringify(query || {});
     const data = cache.get(key);
@@ -145,7 +145,7 @@ function getJson(url, query) {
     }
 
     const response = rp({ uri: url, json: true, qs: query });
-    cache.set(key, response)
+    cache.set(key, response);
     return response;
 }
 
@@ -158,7 +158,7 @@ export function linesForStop(id) {
 export function stopsForLine(id) {
     console.log("fetching stops for line", id);
     return getJson(`${baseUrl}/Line/GetStopsByLineID/${id}`)
-        .then(e => e.map(parseStopInfo))
+        .then(e => e.map(parseStopInfo));
 }
 
 export function lineInfo(id) {
@@ -191,7 +191,7 @@ export function closestStops(x, y, maxDistance) {
     const url = `${baseUrl}/Place/GetClosestStops`;
     const query = {
         coordinates: `(X=${x},Y=${y})`
-    }
+    };
     return getJson(url, query).then(e =>  e.map(parseStopInfo));
 }
 
@@ -202,7 +202,7 @@ export function areaStops(sw, ne) {
         ymin: sw.y,
         xmax: ne.x,
         ymax: ne.y
-    }
+    };
     return getJson(url, query).then(e =>  e.map(parseStopInfo));
 }
 
@@ -211,7 +211,7 @@ function parseTravelPlans(plans) {
 }
 
 function parseDurationString(duration) {
-    const [hours, mins, secs] = duration.split(":").map(e => parseInt(e));
+    const [hours, mins, _] = duration.split(":").map(e => parseInt(e));
     return (hours * 60) + mins;
 }
 
@@ -219,7 +219,7 @@ function parseTravelStage(stage) {
     
     const typedStage = stage.Transportation == 0
              ? parseWalkingTravelStage(stage)
-             : parseTransitTravelStage(stage)
+             : parseTransitTravelStage(stage);
 
     const x = Object.assign(typedStage, {
         departureTime: stage.DepartureTime,
@@ -236,7 +236,7 @@ function parseTravelStage(stage) {
 function parseWalkingTravelStage(stage) {
     return {
         pos: "todo"
-    }
+    };
 }
 
 function parseTransitTravelStage(stage) {
@@ -247,7 +247,7 @@ function parseTransitTravelStage(stage) {
         arrivalStop: parseStopInfo(stage.ArrivalStop),
         lineName: stage.LineName,
         color: stage.LineColour
-    }
+    };
 }
 
 function parseTravelPlan(plan) {
@@ -258,11 +258,11 @@ function parseTravelPlan(plan) {
         remarks: plan.Remarks,
         zones: [],
         stages: plan.Stages.map(parseTravelStage)
-    }
+    };
 }
 
 function locInputToQuery(loc) {
-    return loc.id ? loc.id : `(X=${loc.x},Y=${loc.y})`
+    return loc.id ? loc.id : `(X=${loc.x},Y=${loc.y})`;
 }
 
 export function getTravelPlan(origin, destination) {
@@ -288,7 +288,7 @@ function parseStreetHouses(houses) {
                 name: e.Name,
                 geoLocation: toLatLon(e.X, e.Y, 32, null, true), // should be "V"?
                 utmLocation: {x: e.X, y: e.Y},
-            }))
+            }));
 }
 
 export function streetHouses(id) {

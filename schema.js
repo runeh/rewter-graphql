@@ -107,9 +107,7 @@ const PlannerLocationInput = new GraphQLInputObjectType({
             type: AreaIdInput
         }
     }
-})
-
-
+});
 
 
 const TransportationType = new GraphQLEnumType({
@@ -666,8 +664,7 @@ const TravelProposal = new GraphQLObjectType({
             type: new GraphQLList(GraphQLString)
         },
         stages: {
-            type: new GraphQLList((TravelStageInterface))
-            //type: new GraphQLList(new GraphQLNonNull(TravelStageInterface))
+            type: new GraphQLList(TravelStageInterface)
         }
 
         // todo totaltime
@@ -719,9 +716,8 @@ const WalkingTravelStage = new GraphQLObjectType({
         // own:
 
         // arrival point and departure point
-
     })
-})
+});
 
 
 const TransitTravelStage = new GraphQLObjectType({
@@ -768,7 +764,6 @@ const TransitTravelStage = new GraphQLObjectType({
             type: new GraphQLNonNull(Line),
             resolve: ({line}) => lineInfo(line)
         }
-
     })
 });
 
