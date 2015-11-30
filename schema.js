@@ -1,9 +1,4 @@
 import {
-    getTravelPlan,
-    placesForName
-} from './ruter-fetcher';
-
-import {
     GraphQLBoolean,
     GraphQLEnumType,
     GraphQLFloat,
@@ -19,8 +14,6 @@ import {
     GraphQLUnionType,
 } from 'graphql';
 
-import {fromLatLon} from 'utm';
-
 import {
     resolveStopInfo,
     resolveLineInfo,
@@ -32,7 +25,9 @@ import {
     resolveVisitsToDestinations,
     resolvePlatformsFromVisits,
     resolveClosestStops,
-    resolveAreaStops
+    resolveAreaStops,
+    resolveGetTravelPlan,
+    resolvePlacesForName
 } from './resolvers'
 
 // todo: use custom scalars for color and transporttime, maybe date?
@@ -751,34 +746,6 @@ const TransitTravelStage = new GraphQLObjectType({
 });
 
 
-
-
-/*
- * todo: wrap utm method to parseint and add correct datum
- *
- * todo: add a validation step that can live with schema and run
- * with resolveWithPrecondition(fun, 'actualResolver') or similar
- */
-function plannerLocationInputToObject(ploc) {
-    if (ploc.geo) {
-        const {easting, northing} = fromLatLon(ploc.geo.lat, ploc.geo.lng);
-        return {x: parseInt(easting), y: parseInt(northing)};
-    }
-    else if (ploc.utm) {
-        return {x: ploc.utm.x, y: ploc.utm.y};
-    }
-    else if (ploc.stop) {
-        return {id: ploc.stop.id};
-    }
-    else if (ploc.area) {
-        return {id: ploc.area.id};
-    }
-    else {
-        throw new Error("PlannerLocationInput must have one of utm, geo, stop or area set");
-    }
-}
-
-
 export const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
         name: 'Query',
@@ -822,13 +789,7 @@ export const schema = new GraphQLSchema({
                     }
                     // add counties and type
                 },
-                resolve: (root, {name, type}) => {
-                    let p = placesForName(name);
-                    if (type) {
-                        p = p.then(e => e.filter(y => type.indexOf(y.placeType) != -1));
-                    }
-                    return p;
-                }
+                resolve: (root, {name, type}) => resolvePlacesForName(name, type)
             },
 
             pointStops: {
@@ -873,9 +834,7 @@ export const schema = new GraphQLSchema({
                     }
                 },
                 resolve: (root, {origin, destination}) => {
-                    origin = plannerLocationInputToObject(origin);
-                    destination = plannerLocationInputToObject(destination);
-                    return getTravelPlan(origin, destination);
+                    return resolveGetTravelPlan(origin, destination);
                 }
             }
         },

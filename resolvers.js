@@ -28,6 +28,8 @@ import {
     zip,
 } from 'ramda';
 
+import {fromLatLon} from 'utm';
+
 export function resolveStopInfo(id) {
     return stopInfo(id);
 }
@@ -107,4 +109,43 @@ export function resolveAreaStops(sw, ne) {
 }
 
 export const resolveUniqueDeviations = pipe(pluck('deviations'), flatten, uniq);
+
+/*
+ * todo: wrap utm method to parseint and add correct datum
+ *
+ * todo: add a validation step that can live with schema and run
+ * with resolveWithPrecondition(fun, 'actualResolver') or similar
+ */
+function plannerLocationInputToObject(ploc) {
+    if (ploc.geo) {
+        const {easting, northing} = fromLatLon(ploc.geo.lat, ploc.geo.lng);
+        return {x: parseInt(easting), y: parseInt(northing)};
+    }
+    else if (ploc.utm) {
+        return {x: ploc.utm.x, y: ploc.utm.y};
+    }
+    else if (ploc.stop) {
+        return {id: ploc.stop.id};
+    }
+    else if (ploc.area) {
+        return {id: ploc.area.id};
+    }
+    else {
+        throw new Error("PlannerLocationInput must have one of utm, geo, stop or area set");
+    }
+}
+
+export function resolveGetTravelPlan(origin, destination) {
+    origin = plannerLocationInputToObject(origin);
+    destination = plannerLocationInputToObject(destination);
+    return getTravelPlan(origin, destination);    
+}
+
+export function resolvePlacesForName(name, type = null) {
+    let p = placesForName(name);
+    if (type) {
+        p = p.then(e => e.filter(y => type.indexOf(y.placeType) != -1));
+    }
+    return p;
+}
 
