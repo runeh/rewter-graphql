@@ -1,33 +1,20 @@
 import {
-    // GraphQLBoolean,
-    // GraphQLEnumType,
-    // GraphQLFloat,
     GraphQLID,
-    // GraphQLInputObjectType,
     GraphQLInt,
-    // GraphQLInterfaceType,
     GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,
     GraphQLSchema,
     GraphQLString,
-    // GraphQLUnionType,
 } from 'graphql';
 
 import {
-    resolveStopInfo,
-    resolveLineInfo,
-    // resolveStopsForLine,
-    // resolveLinesForStop,
-    // resolveStopVisits,
-    // resolveUniqueDeviations,
-    // resolveStreetHouses,
-    // resolveVisitsToDestinations,
-    // resolvePlatformsFromVisits,
-    resolveClosestStops,
     resolveAreaStops,
+    resolveClosestStops,
     resolveGetTravelPlan,
+    resolveLineInfo,
     resolvePlacesForName,
+    resolveStopInfo,
 } from './resolvers'
 
 
@@ -36,9 +23,9 @@ import {
 } from './types/core'
 
 import {
-    Stop,
     PlaceInterface,
-    PlaceType
+    PlaceType,
+    Stop,
 } from './types/place'
 
 import {
@@ -149,3 +136,4 @@ export const schema = new GraphQLSchema({
 
     })
 });
+
