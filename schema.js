@@ -71,6 +71,8 @@ export const schema = new GraphQLSchema({
                 },
                 resolve: (root, {id}, source) => resolveLineInfo(id)
             },
+            
+            //todo : echo the search term back?
             places: {
                 type: new GraphQLList(PlaceInterface),
                 args: {

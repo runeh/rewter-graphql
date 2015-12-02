@@ -46,6 +46,12 @@ export function resolveLinesForStop(id) {
     return linesForStop(id);
 }
 
+export function resolveTransportationTypesForStop(id) {
+    return linesForStop(id)
+        .then(pluck("transportationType"))
+        .then(uniq);
+}
+
 export function resolveStopVisits(id) {
     // fixme: supprts more args
     return stopVisits(id);

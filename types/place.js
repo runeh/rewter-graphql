@@ -25,6 +25,7 @@ import {
     resolveLinesForStop,
     resolveStopVisits,
     resolveStreetHouses,
+    resolveTransportationTypesForStop,
 } from '../resolvers'
 
 
@@ -211,8 +212,15 @@ export const Stop = new GraphQLObjectType({
             type: new GraphQLNonNull(UTMLocation)
         },
         geoLocation: {
-            type: new GraphQLNonNull(GeoLocation),
+            type: new GraphQLNonNull(GeoLocation)
         },
+
+        transportationTypes: {
+            type: new GraphQLList(TransportationType),
+            description: "List of all transportation types departing from the stop",
+            resolve: ({id}) => resolveTransportationTypesForStop(id)
+        },
+
         lines: {
             type: new GraphQLList(Line),
             description: 'lines serviced by from stop by type',
