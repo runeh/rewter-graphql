@@ -100,7 +100,7 @@ function geoLocationInputToUtm(loc) {
 
 // todo: more args
 export function resolveClosestStops(point) {
-    const {easting, northing} = geoLocationInputToUtm(location);
+    const {easting, northing} = geoLocationInputToUtm(point);
     return closestStops(easting, northing);    
 }
 
