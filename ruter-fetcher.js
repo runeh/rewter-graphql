@@ -223,8 +223,7 @@ function parseDurationString(duration) {
     return (hours * 60) + mins;
 }
 
-function parseTravelStage(stage) {
-    
+function parseTravelStage(stage) {    
     const typedStage = stage.Transportation == 0
              ? parseWalkingTravelStage(stage)
              : parseTransitTravelStage(stage);
@@ -282,7 +281,7 @@ export function getTravelPlan(origin, destination) {
         toplace: toplace,
         fromplace: fromplace,
         isafter: true,
-        time: 28112015173000
+        time: 10122015173000
     };
     return getJson(url, query).then(parseTravelPlans);
 }
