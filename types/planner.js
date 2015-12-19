@@ -53,23 +53,27 @@ export const TravelProposal = new GraphQLObjectType({
 });
 
 
+const TravelStageImpl = {
+    departureTime: {
+        type: new GraphQLNonNull(GraphQLString)
+    },
+    arrivalTime: {
+        type: new GraphQLNonNull(GraphQLString)            
+    },
+    travelTimeMins: {
+        type: new GraphQLNonNull(GraphQLInt)
+    },
+    transportationType: {
+        type: new GraphQLNonNull(TransportationType)
+    }    
+}
+
+
 export const TravelStageInterface = new GraphQLInterfaceType({
     name: 'TravelStageInterface',
     description: 'A stage of a travel proposal',
-
     fields: () => ({
-        departureTime: {
-            type: new GraphQLNonNull(GraphQLString)
-        },
-        arrivalTime: {
-            type: new GraphQLNonNull(GraphQLString)            
-        },
-        travelTimeMins: {
-            type: new GraphQLNonNull(GraphQLInt)
-        },
-        transportationType: {
-            type: new GraphQLNonNull(TransportationType)
-        }
+        ...TravelStageImpl
     })
 });
 
@@ -81,21 +85,8 @@ export const WalkingTravelStage = new GraphQLObjectType({
     isTypeOf: e => e.transportationType == 0, // fixme, use enum somehow
 
     fields: () => ({
-        // from TravelStageInterface:
-        departureTime: {
-            type: new GraphQLNonNull(GraphQLString)
-        },
-        arrivalTime: {
-            type: new GraphQLNonNull(GraphQLString)            
-        },
-        travelTimeMins: {
-            type: new GraphQLNonNull(GraphQLInt)
-        },
-        transportationType: {
-            type: new GraphQLNonNull(TransportationType)
-        },
+        ...TravelStageImpl,
 
-        // own:
         arrivalGeoLocation: {
             type: new GraphQLNonNull(GeoLocation)
         },
@@ -111,7 +102,6 @@ export const WalkingTravelStage = new GraphQLObjectType({
         departureUtmLocation: {
             type: new GraphQLNonNull(UTMLocation)
         }
-
     })
 });
 
@@ -123,19 +113,7 @@ export const TransitTravelStage = new GraphQLObjectType({
     isTypeOf: e => e.transportationType != 0, // fixme, use enum somehow
 
     fields: () => ({
-        // from TravelStageInterface:
-        departureTime: {
-            type: new GraphQLNonNull(GraphQLString)
-        },
-        arrivalTime: {
-            type: new GraphQLNonNull(GraphQLString)            
-        },
-        travelTimeMins: {
-            type: new GraphQLNonNull(GraphQLInt)
-        },
-        transportationType: {
-            type: new GraphQLNonNull(TransportationType)
-        },
+        ...TravelStageImpl,
 
         // own:
         destinationName: {

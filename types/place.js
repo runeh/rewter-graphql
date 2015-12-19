@@ -52,26 +52,30 @@ export const PlaceType = new GraphQLEnumType({
     }
 });
 
+const PlaceImpl = {
+   id: {
+        type: GraphQLID,
+        description: 'Unique ID for a place'
+    },
+    name: {
+        type: new GraphQLNonNull(GraphQLString),
+        description: 'Name of place'
+    },
+    district: {
+        type: new GraphQLNonNull(GraphQLString),
+        description: 'District place belongs to'
+    },
+    placeType: {
+        type: new GraphQLNonNull(PlaceType),
+        description: 'Type of place'
+    }
+}
+
 export const PlaceInterface = new GraphQLInterfaceType({
     name: 'PlaceInterface',
     description: 'A place of some kind',
     fields: {
-       id: {
-            type: GraphQLID,
-            description: 'Unique ID for a place'
-        },
-        name: {
-            type: new GraphQLNonNull(GraphQLString),
-            description: 'Name of place'
-        },
-        district: {
-            type: new GraphQLNonNull(GraphQLString),
-            description: 'District place belongs to'
-        },
-        placeType: {
-            type: new GraphQLNonNull(PlaceType),
-            description: 'Type of place'
-        }
+        ...PlaceImpl
     }
 });
 
@@ -82,21 +86,8 @@ export const Street = new GraphQLObjectType({
     interfaces: [ PlaceInterface ],
     isTypeOf: e => e.placeType == "Street", // fixme, use enum somehow
     fields: () => ({
-        // fields for PlaceInterface
-        id: {
-            type: GraphQLID,
-        },
-        name: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-        placeType: {
-            type: new GraphQLNonNull(PlaceType),
-        },
-        district: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
+        ...PlaceImpl,
 
-        // own fields
         houses: {
             type: new GraphQLList(House),
             resolve: ({id}) => resolveStreetHouses(id)
@@ -111,21 +102,8 @@ export const POI = new GraphQLObjectType({
     interfaces: [ PlaceInterface ],
     isTypeOf: e => e.placeType == "POI", // fixme, use enum somehow
     fields: () => ({
-        // fields for PlaceInterface
-        id: {
-            type: GraphQLID,
-        },
-        name: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-        placeType: {
-            type: new GraphQLNonNull(PlaceType),
-        },
-        district: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
+        ...PlaceImpl,
 
-        // own fields
         geoLocation: {
             type: new GraphQLNonNull(GeoLocation)
         },
@@ -146,21 +124,8 @@ export const Area = new GraphQLObjectType({
     interfaces: [ PlaceInterface ],
     isTypeOf: e => e.placeType == "Area", // fixme, use enum somehow
     fields: () => ({
-        // fields for PlaceInterface
-        id: {
-            type: GraphQLID,
-        },
-        name: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-        placeType: {
-            type: new GraphQLNonNull(PlaceType),
-        },
-        district: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
+        ...PlaceImpl,
 
-        // own fields
         geoLocation: {
             type: new GraphQLNonNull(GeoLocation)
         },
@@ -180,22 +145,8 @@ export const Stop = new GraphQLObjectType({
     interfaces: [ PlaceInterface ],
     isTypeOf: e => e.placeType == "Stop", // fixme, use enum somehow
     fields: () => ({
+        ...PlaceImpl,
 
-        // fields for PlaceInterface
-        id: {
-            type: GraphQLID,
-        },
-        name: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-        placeType: {
-            type: new GraphQLNonNull(PlaceType),
-        },
-        district: {
-            type: new GraphQLNonNull(GraphQLString),
-        },
-
-        // Other fields
         shortName: {
             type: new GraphQLNonNull(GraphQLString),
             description: 'desc'
@@ -294,4 +245,3 @@ export const House = new GraphQLObjectType({
         // todo: from house to stops and sales points
     })
 });
-

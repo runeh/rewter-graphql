@@ -121,7 +121,6 @@ export const Line = new GraphQLObjectType({
             description: 'Stops serviced by this line',
             resolve: ({id}, args, source) => resolveStopsForLine(id)
         }
-    }),
-    interfaces: [ ]
+    })
 });
 
