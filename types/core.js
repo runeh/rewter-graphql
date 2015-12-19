@@ -64,18 +64,34 @@ export const TransportationType = new GraphQLEnumType({
 });
 
 
+export const LatLngImpl = {
+    lat: {
+        type: new GraphQLNonNull(GraphQLFloat),
+        description: 'latitude'
+    },
+    lng: {
+        type: new GraphQLNonNull(GraphQLFloat),
+        description: 'longitude'
+    }
+}
+
+export const UTMImpl = {
+    x: {
+        type: new GraphQLNonNull(GraphQLInt),
+        description: 'Northing'
+    },
+    y: {
+        type: new GraphQLNonNull(GraphQLInt),
+        description: 'Easting'
+    }    
+}
+
+
 export const GeoLocation = new GraphQLObjectType({
     name: 'GeoLocation',
-    description: 'Lat/Lon location',
+    description: 'lat/lng location',
     fields: {
-        latitude: {
-            type: GraphQLFloat,
-            description: 'latitude'
-        },
-        longitude: {
-            type: GraphQLFloat,
-            description: 'longitude'
-        }
+        ...LatLngImpl
     }
 });
 
@@ -84,14 +100,7 @@ export const UTMLocation = new GraphQLObjectType({
     name: 'UTMLocation',
     description: 'Location in UTM 32 format',
     fields: {
-        x: {
-            type: GraphQLInt,
-            description: 'Northing'
-        },
-        y: {
-            type: GraphQLInt,
-            description: 'Easting'
-        }
+        ...UTMImpl
     }
 });
 

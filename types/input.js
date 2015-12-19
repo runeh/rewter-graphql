@@ -6,12 +6,16 @@ import {
 } from 'graphql';
 
 
+import {
+    LatLngImpl,
+    UTMImpl
+} from './core.js';
+
 export const GeoLocationInput = new GraphQLInputObjectType({
     name: 'GeoLocationInput',
-    description: 'A location in lat/lon format',
+    description: 'A location in lat/lng format',
     fields: {
-        lat: { type: new GraphQLNonNull(GraphQLFloat) },
-        lng: { type: new GraphQLNonNull(GraphQLFloat) },
+        ...LatLngImpl
     }
 });
 
@@ -20,8 +24,8 @@ export const UtmLocationInput = new GraphQLInputObjectType({
     name: 'UtmLocationInput',
     description: 'A location in UTM32 format',
     fields: {
-        x: { type: new GraphQLNonNull(GraphQLFloat) },
-        y: { type: new GraphQLNonNull(GraphQLFloat) },
+        ...UTMImpl
+
     }
 });
 

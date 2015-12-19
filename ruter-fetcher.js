@@ -22,7 +22,8 @@ const vehicleModeToTransportType = {
 };
 
 function utmToGeo(x, y) {
-    return toLatLon(x, y, 32, null, true)    
+    const loc = toLatLon(x, y, 32, null, true);
+    return { lat: loc.latitude, lng: loc.longitude };
 }
 
 function parseStopInfo(info) {
