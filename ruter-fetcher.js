@@ -1,12 +1,7 @@
 import {format as urlFormat, parse as urlParse} from 'url';
 import rp from 'request-promise';
 import {toLatLon} from 'utm';
-import LRU from 'lru-cache';
 
-const cache = LRU({
-    maxAge: 1000 * 20,
-    max: 200
-});
 const baseUrl = 'https://reisapi.ruter.no';
 
 // mapper between how transport type is represented in
@@ -143,19 +138,7 @@ function sanitizeUrl(url) {
 
 function getJson(url, query = null) {
     url = sanitizeUrl(url);
-    const key = url + ":" + JSON.stringify(query || {});
-    const data = cache.get(key);
-    if (data) { 
-        console.log("cache hit:  ", key);
-        return data;
-    } 
-    else {
-        console.log("cache miss: ", key);
-    }
-
-    const response = rp({ uri: url, json: true, qs: query });
-    cache.set(key, response);
-    return response;
+    return rp({ uri: url, json: true, qs: query });
 }
 
 export function linesForStop(id) {
