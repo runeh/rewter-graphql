@@ -1,3 +1,5 @@
+import pkg from './package.json';
+
 import {
     GraphQLID,
     GraphQLInt,
@@ -47,15 +49,11 @@ export const schema = new GraphQLSchema({
         fields: {
             serverVersion: {
                 type: GraphQLString,
-                resolve: function() {
-                    return '1.0';
-                }
+                resolve: () => pkg.version
             },
             utcTime: {
                 type: GraphQLString,
-                resolve: function() {
-                    return new Date().toString();
-                }
+                resolve: () => new Date().toISOString()
             },
             stop: {
                 type: Stop,
