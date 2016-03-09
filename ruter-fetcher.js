@@ -1,6 +1,10 @@
+import debug from 'debug';
 import {format as urlFormat, parse as urlParse} from 'url';
 import rp from 'request-promise';
 import {toLatLon} from 'utm';
+
+const urlDebug = debug('rewter:fetcher:http');
+const getDebug = debug('rewter:fetcher:get');
 
 const baseUrl = 'https://reisapi.ruter.no';
 
@@ -138,42 +142,43 @@ function sanitizeUrl(url) {
 
 function getJson(url, query = null) {
     url = sanitizeUrl(url);
+    urlDebug(`fetching url "${url}"`);
     return rp({ uri: url, json: true, qs: query });
 }
 
 export function linesForStop(id) {
-    console.log("fetching lines for stop", id);
+    getDebug(`fetching lines for stop ${id}`);
     return getJson(`${baseUrl}/Line/GetLinesByStopID/${id}`)
                .then(e => e.map(parseLineInfo));
 }
 
 export function stopsForLine(id) {
-    console.log("fetching stops for line", id);
+    getDebug(`fetching stops for line ${id}`);
     return getJson(`${baseUrl}/Line/GetStopsByLineID/${id}`)
         .then(e => e.map(parseStopInfo));
 }
 
 export function lineInfo(id) {
-    console.log("fetching lines info for", id);
+    getDebug(`fetching line info for ${id}`);
     return getJson(`${baseUrl}/Line/GetDataByLineID/${id}`)
         .then(parseLineInfo);
 }
 
 export function stopInfo(id) {
-    console.log("fetching stop info for", id);
+    getDebug(`fetching stop info for ${id}`);
     return getJson(`${baseUrl}/Place/GetStop/${id}`)
             .then(parseStopInfo);
 }
 
 export function stopVisits(id, transporttypes, linenames) {
-    console.log("fetching stop info for", id);
+    getDebug(`fetching stop visits for ${id}`);
     return getJson(
         `${baseUrl}/StopVisit/GetDepartures/${id}`, {transporttypes, linenames}
     ).then(e => e.map(parseVisit));
 }
 
 export function placesForName(name, counties) {
-    console.log("fetching places for", name);
+    getDebug(`fetching places for ${name}`);
     return getJson(
         `${baseUrl}/Place/GetPlaces/${name}`, {counties}
     ).then(e => e.map(parsePlace));
@@ -256,7 +261,7 @@ function locInputToQuery(loc) {
 }
 
 export function getTravelPlan(origin, destination) {
-    console.log("fetching travel plan for", origin, destination);
+    getDebug("fetching travel plan for", origin, destination);
     const fromplace = locInputToQuery(origin);
     const toplace = locInputToQuery(destination);
 
@@ -282,6 +287,7 @@ function parseStreetHouses(houses) {
 }
 
 export function streetHouses(id) {
+    getDebug(`houses for street ${id}`);
     const url = `${baseUrl}/Street/GetStreet/${id}`;
     return getJson(url).then(parseStreetHouses);
 }
