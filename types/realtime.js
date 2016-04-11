@@ -4,7 +4,8 @@ import {
     GraphQLString,
     GraphQLList,
     GraphQLBoolean,
-    GraphQLID
+    GraphQLID,
+    GraphQLInt
 } from 'graphql';
 
 import {
@@ -89,7 +90,24 @@ export const Realtime = new GraphQLObjectType({
     fields: () => ({
         visits: {
             type: new GraphQLList(RealtimeVisit),
-            resolve: (visits) => visits
+            args: {
+                limit: {
+                    type: GraphQLInt
+                },
+                direction: {
+                    type: GraphQLString
+                },
+            },
+            resolve: function(visits, {limit, direction}) {
+                if (direction) {
+                    visits = visits.filter(e => e.direction == direction)
+                }
+
+                if (limit) {
+                    visits = visits.slice(0, limit);
+                }
+                return visits;
+            }
         },
         platforms: {
             type: new GraphQLList(RealtimePlatform),
